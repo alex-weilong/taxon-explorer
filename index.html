@@ -210,6 +210,24 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 .pr-type { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--dim); text-transform: uppercase; }
 .place-msg { padding: 10px 12px; color: var(--dim); font-family: 'DM Mono', monospace; font-size: 0.72rem; text-align: center; }
 
+/* Place preview map panel */
+.place-preview {
+  border-top: 1px solid var(--border);
+  height: 180px; position: relative;
+  background: var(--surface2); display: none;
+}
+.place-preview.visible { display: block; }
+.place-preview-label {
+  position: absolute; bottom: 8px; left: 8px; z-index: 10;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: white; background: rgba(0,0,0,0.55);
+  padding: 3px 8px; border-radius: 4px;
+  backdrop-filter: blur(4px); max-width: 80%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  pointer-events: none;
+}
+#placePreviewMap { width: 100%; height: 100%; }
+
 .active-place {
   display: none; align-items: center; gap: 8px;
   padding: 4px 10px; border-radius: 99px;
@@ -327,6 +345,64 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 .modal-handle { display: none; width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
 .modal-photo { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }
 .modal-no-photo { width: 100%; aspect-ratio: 16/9; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 4rem; border-radius: 16px 16px 0 0; }
+
+/* GALLERY */
+.gallery-wrap { position: relative; background: #000; border-radius: 16px 16px 0 0; overflow: hidden; }
+.gallery-main { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; cursor: zoom-in; transition: opacity 0.2s; }
+.gallery-main.loading { opacity: 0.4; }
+.gallery-counter {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  background: rgba(0,0,0,0.6); color: #fff; border-radius: 99px;
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  padding: 3px 10px; backdrop-filter: blur(4px);
+}
+.gallery-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; backdrop-filter: blur(4px);
+  transition: all 0.2s; z-index: 2;
+}
+.gallery-nav:hover { background: rgba(126,231,135,0.3); border-color: var(--accent); }
+.gallery-nav.prev { left: 10px; }
+.gallery-nav.next { right: 10px; }
+.gallery-nav:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+.gallery-thumbs {
+  display: flex; gap: 6px; padding: 8px 12px;
+  background: rgba(0,0,0,0.7); overflow-x: auto;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  scrollbar-width: none;
+}
+.gallery-thumbs::-webkit-scrollbar { display: none; }
+.gallery-thumb {
+  width: 52px; height: 40px; object-fit: cover;
+  border-radius: 5px; cursor: pointer; flex-shrink: 0;
+  border: 2px solid transparent; transition: all 0.15s; opacity: 0.6;
+}
+.gallery-thumb.active { border-color: var(--accent); opacity: 1; }
+.gallery-thumb:hover { opacity: 0.9; }
+.gallery-caption {
+  position: absolute; bottom: 56px; left: 0; right: 0;
+  padding: 4px 12px;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: rgba(255,255,255,0.6); text-align: right;
+  pointer-events: none;
+}
+.gallery-loading-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; background: var(--surface2);
+  border-radius: 16px 16px 0 0;
+}
+/* Lightbox */
+.lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.95); display: flex;
+  align-items: center; justify-content: center;
+  cursor: zoom-out; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
 .modal-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 2; }
 .modal-close:hover { border-color: var(--accent3); background: rgba(247,129,102,0.15); }
 .modal-body { padding: 28px; }
@@ -477,7 +553,12 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
       <span class="place-icon">🌍</span>
       <input class="place-input" id="placeInput" type="text" placeholder="Filtrar por país o región…" autocomplete="off" spellcheck="false">
       <button class="place-clear" id="placeClear">✕</button>
-      <div class="place-dropdown" id="placeDropdown"></div>
+      <div class="place-dropdown" id="placeDropdown">
+        <div class="place-preview" id="placePreview">
+          <div id="placePreviewMap"></div>
+          <div class="place-preview-label" id="placePreviewLabel"></div>
+        </div>
+      </div>
     </div>
     <div class="active-place" id="activePlace">
       <span id="activePlaceName"></span>
@@ -486,6 +567,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
   </div>
 </div>
 <main id="main"></main>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg" src="" alt=""></div>
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalSheet">
@@ -569,30 +652,26 @@ history.replaceState({ depth: 0 }, '', '');
 // ─── iNATURALIST API ──────────────────────────────────────────
 const API = 'https://api.inaturalist.org/v1';
 
-// Active place filter
 let activePlaceId = null;
 let activePlaceName = '';
 
-// Fetch direct children of a taxon at a given rank
-async function fetchChildren(parentId, rank, perPage = 50, placeId = null) {
-  let url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=${perPage}&order_by=observations_count&locale=es`;
-  if (placeId) url += `&place_id=${placeId}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  const data = await res.json();
-  return data.results || [];
+// Single cache — cleared completely when place changes
+const cache = {};
+function clearCache() { Object.keys(cache).forEach(k => delete cache[k]); }
+
+// ── Global: children by rank ──────────────────────────────────
+async function fetchChildren(parentId, rank) {
+  const url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=50&order_by=observations_count&locale=es`;
+  const r = await fetch(url);
+  return (await r.json()).results || [];
 }
 
-// Fetch species under a taxon
-async function fetchSpecies(parentId, perPage = 100, placeId = null) {
-  let url = `${API}/taxa?taxon_id=${parentId}&rank=species&per_page=${perPage}&order_by=observations_count&locale=es`;
-  if (placeId) url += `&place_id=${placeId}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  const data = await res.json();
-  return (data.results || []).map(sp => ({
-    id: sp.id,
-    name: sp.name,
+// ── Global: species list ──────────────────────────────────────
+async function fetchSpeciesGlobal(parentId) {
+  const url = `${API}/taxa?taxon_id=${parentId}&rank=species&per_page=100&order_by=observations_count&locale=es`;
+  const r = await fetch(url);
+  return ((await r.json()).results || []).map(sp => ({
+    id: sp.id, name: sp.name,
     common: sp.preferred_common_name || '',
     photo: sp.default_photo?.medium_url || sp.default_photo?.url || null,
     observations: sp.observations_count || 0,
@@ -601,20 +680,112 @@ async function fetchSpecies(parentId, perPage = 100, placeId = null) {
   }));
 }
 
-// Cache includes place_id in key so filters don't collide
-const childCache = {};
-async function cachedChildren(parentId, rank, perPage) {
-  const key = `${parentId}_${rank}_${activePlaceId || '0'}`;
-  if (!childCache[key]) childCache[key] = fetchChildren(parentId, rank, perPage, activePlaceId);
-  return childCache[key];
+// ── Place: species observed in place ─────────────────────────
+async function fetchSpeciesInPlace(parentId, placeId) {
+  let all = [];
+  for (let page = 1; page <= 5; page++) {
+    const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&per_page=100&page=${page}&locale=es`;
+    const r = await fetch(url);
+    if (!r.ok) break;
+    const data = await r.json();
+    all = all.concat(data.results || []);
+    if ((data.results || []).length < 100) break;
+  }
+  return all.map(r => ({
+    id: r.taxon.id, name: r.taxon.name,
+    common: r.taxon.preferred_common_name || '',
+    photo: r.taxon.default_photo?.medium_url || r.taxon.default_photo?.url || null,
+    observations: r.count || 0,
+    inatUrl: `https://www.inaturalist.org/taxa/${r.taxon.id}`,
+    wikipedia: r.taxon.wikipedia_url || null,
+    ancestor_ids: r.taxon.ancestor_ids || [],
+  }));
 }
+
+// ── Place: children at a given rank ──────────────────────────
+// Gets all species in place → extracts ancestor_ids → batch-resolves
+// them to find which ancestors match the requested rank.
+async function fetchChildrenInPlace(parentId, rank, placeId) {
+  let allResults = [];
+  for (let page = 1; page <= 5; page++) {
+    const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&per_page=100&page=${page}&locale=es`;
+    const r = await fetch(url);
+    if (!r.ok) break;
+    const data = await r.json();
+    allResults = allResults.concat(data.results || []);
+    if ((data.results || []).length < 100) break;
+  }
+  if (!allResults.length) return [];
+
+  // All ancestor IDs seen across all species
+  const allAncIds = new Set();
+  allResults.forEach(r => (r.taxon.ancestor_ids || []).forEach(id => allAncIds.add(id)));
+
+  // Batch-fetch those ancestors to find which are at the requested rank
+  const ids = [...allAncIds];
+  const found = {};
+  for (let i = 0; i < ids.length; i += 100) {
+    try {
+      const r = await fetch(`${API}/taxa?id=${ids.slice(i,i+100).join(',')}&per_page=100&locale=es`);
+      const data = await r.json();
+      (data.results || []).forEach(t => { if (t.rank === rank) found[t.id] = t; });
+    } catch(e) {}
+    if (i + 100 < ids.length) await new Promise(res => setTimeout(res, 100));
+  }
+
+  return Object.values(found).filter(t => allAncIds.has(t.id));
+}
+
+// ── Cached accessors ─────────────────────────────────────────
+async function cachedChildren(parentId, rank) {
+  const key = `ch_${parentId}_${rank}_${activePlaceId||'g'}`;
+  if (!cache[key]) cache[key] = activePlaceId
+    ? fetchChildrenInPlace(parentId, rank, activePlaceId)
+    : fetchChildren(parentId, rank);
+  return cache[key];
+}
+
 async function cachedSpecies(parentId) {
-  const key = `sp_${parentId}_${activePlaceId || '0'}`;
-  if (!childCache[key]) childCache[key] = fetchSpecies(parentId, 100, activePlaceId);
-  return childCache[key];
+  const key = `sp_${parentId}_${activePlaceId||'g'}`;
+  if (!cache[key]) cache[key] = activePlaceId
+    ? fetchSpeciesInPlace(parentId, activePlaceId)
+    : fetchSpeciesGlobal(parentId);
+  return cache[key];
+}
+
+// ── Place count for pill badges ───────────────────────────────
+async function fetchPlaceCount(taxonId) {
+  const key = `pc_${taxonId}_${activePlaceId}`;
+  if (!cache[key]) cache[key] = fetch(
+    `${API}/observations/species_counts?taxon_id=${taxonId}&place_id=${activePlaceId}&per_page=1`
+  ).then(r => r.ok ? r.json() : null).then(d => d?.total_results ?? 0).catch(() => 0);
+  return cache[key];
 }
 
 // ─── HOME ──────────────────────────────────────────────────────
+
+// Cache for species counts per taxon+place
+// Renders a grid of taxon cards, updating pills with place counts asynchronously
+async function renderCardGrid(items, rankLabel, clickFn, getPhotoFn) {
+  const grid = document.getElementById('grid');
+  items.forEach(item => {
+    const globalCount = item.complete_species_count;
+    const pillText = activePlaceId ? '…' : (globalCount ? `${globalCount.toLocaleString()} especies` : '—');
+    const card = makeCard(rankLabel, item.name, item.preferred_common_name || '',
+      [pillText], getPhotoFn(item));
+    card.addEventListener('click', () => clickFn(item));
+    grid.appendChild(card);
+  });
+  if (activePlaceId) {
+    const cards = [...grid.querySelectorAll('.taxon-card')];
+    await Promise.all(items.map(async (item, i) => {
+      const count = await fetchPlaceCount(item.id);
+      const pill = cards[i]?.querySelector('.tc-pill');
+      if (pill) { pill.textContent = `${count.toLocaleString()} especies`; pill.style.color = 'var(--accent2)'; }
+    }));
+  }
+}
+
 function renderHome() {
   const m = document.getElementById('main');
   m.innerHTML = `
@@ -643,7 +814,7 @@ function renderHome() {
 async function enterGroup(group) {
   showLoading(`Cargando órdenes de ${group.name}…`);
   try {
-    const orders = await cachedChildren(group.taxonId, 'order', 50);
+    const orders = await cachedChildren(group.taxonId, 'order');
     if (!orders.length) throw new Error('No se encontraron órdenes. Intenta con otro grupo.');
     pushNav(group.name, () => showOrders(group, orders));
   } catch(e) {
@@ -665,22 +836,15 @@ function showOrders(group, orders) {
     </div>
     <div class="card-grid" id="grid"></div>
   `;
-  sorted.forEach(order => {
-    // complete_species_count = total species in this taxon per iNaturalist
-    const sppCount = order.complete_species_count;
-    const pills = sppCount ? [`${sppCount.toLocaleString()} especies`] : ['ver familias'];
-    const card = makeCard('Orden', order.name, order.preferred_common_name || '',
-      pills, order.default_photo?.medium_url || order.default_photo?.url || null);
-    card.addEventListener('click', () => enterOrder(order));
-    document.getElementById('grid').appendChild(card);
-  });
+  renderCardGrid(sorted, 'Orden', enterOrder,
+    item => item.default_photo?.medium_url || item.default_photo?.url || null);
 }
 
 async function enterOrder(order) {
-  showLoading(`Cargando familias de ${order.name}…`);
+  showLoading(`Cargando familias de ${order.name}…` + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
   try {
-    const families = await cachedChildren(order.id, 'family', 50);
-    if (!families.length) throw new Error('No se encontraron familias.');
+    const families = await cachedChildren(order.id, 'family');
+    if (!families.length) throw new Error('No se encontraron familias' + (activePlaceId ? ' en esta zona.' : '.'));
     pushNav(order.name, () => showFamilies(order, families));
   } catch(e) {
     showError('Error al cargar', e.message, () => enterOrder(order));
@@ -701,21 +865,15 @@ function showFamilies(order, families) {
     </div>
     <div class="card-grid" id="grid"></div>
   `;
-  sorted.forEach(fam => {
-    const sppCount = fam.complete_species_count;
-    const pills = sppCount ? [`${sppCount.toLocaleString()} especies`] : ['ver géneros'];
-    const card = makeCard('Familia', fam.name, fam.preferred_common_name || '',
-      pills, fam.default_photo?.medium_url || fam.default_photo?.url || null);
-    card.addEventListener('click', () => enterFamily(fam));
-    document.getElementById('grid').appendChild(card);
-  });
+  renderCardGrid(sorted, 'Familia', enterFamily,
+    item => item.default_photo?.medium_url || item.default_photo?.url || null);
 }
 
 async function enterFamily(fam) {
-  showLoading(`Cargando géneros de ${fam.name}…`);
+  showLoading(`Cargando géneros de ${fam.name}…` + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
   try {
-    const genera = await cachedChildren(fam.id, 'genus', 50);
-    if (!genera.length) throw new Error('No se encontraron géneros.');
+    const genera = await cachedChildren(fam.id, 'genus');
+    if (!genera.length) throw new Error('No se encontraron géneros' + (activePlaceId ? ' en esta zona.' : '.'));
     pushNav(fam.name, () => showGenera(fam, genera));
   } catch(e) {
     showError('Error al cargar', e.message, () => enterFamily(fam));
@@ -736,21 +894,15 @@ function showGenera(fam, genera) {
     </div>
     <div class="card-grid" id="grid"></div>
   `;
-  sorted.forEach(genus => {
-    const sppCount = genus.complete_species_count;
-    const pills = sppCount ? [`${sppCount.toLocaleString()} especies`] : ['ver especies'];
-    const card = makeCard('Género', genus.name, genus.preferred_common_name || '',
-      pills, genus.default_photo?.medium_url || genus.default_photo?.url || null);
-    card.addEventListener('click', () => enterGenus(genus));
-    document.getElementById('grid').appendChild(card);
-  });
+  renderCardGrid(sorted, 'Género', enterGenus,
+    item => item.default_photo?.medium_url || item.default_photo?.url || null);
 }
 
 async function enterGenus(genus) {
-  showLoading(`Cargando especies de ${genus.name}…`);
+  showLoading(`Cargando especies de ${genus.name}…` + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
   try {
     const species = await cachedSpecies(genus.id);
-    if (!species.length) throw new Error('No se encontraron especies.');
+    if (!species.length) throw new Error('No se encontraron especies' + (activePlaceId ? ' en esta zona.' : '.'));
     pushNav(genus.name, () => showSpecies(genus, species));
   } catch(e) {
     showError('Error al cargar', e.message, () => enterGenus(genus));
@@ -823,14 +975,17 @@ function formatCount(n) {
 // ─── MODAL ────────────────────────────────────────────────────
 let currentMap = null;
 
-function openModal(sp) {
-  const photo = sp.photo
-    ? `<img class="modal-photo" src="${sp.photo}" alt="${sp.name}"
-         onerror="this.outerHTML='<div class=\\'modal-no-photo\\'>📷</div>'">`
-    : `<div class="modal-no-photo">📷</div>`;
+// ─── GALLERY STATE ────────────────────────────────────────────
+let galleryPhotos = [];
+let galleryIndex  = 0;
 
+function openModal(sp) {
   document.getElementById('modalContent').innerHTML = `
-    ${photo}
+    <div class="gallery-wrap" id="galleryWrap">
+      <div class="gallery-loading-overlay" id="galleryLoader">
+        <div class="map-spinner" style="width:32px;height:32px;border-top-color:var(--accent)"></div>
+      </div>
+    </div>
     <div class="modal-body">
       <div class="modal-sci">${sp.name}</div>
       ${sp.common ? `<div class="modal-common">${sp.common}</div>` : ''}
@@ -858,13 +1013,113 @@ function openModal(sp) {
 
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-
-  // Destroy previous map instance
   if (currentMap) { currentMap.remove(); currentMap = null; }
 
-  // Load map after a tick so the DOM is ready
+  // Load gallery and map in parallel
+  loadGallery(sp);
   setTimeout(() => loadMap(sp), 50);
 }
+
+async function loadGallery(sp) {
+  // Fetch research-grade observations with photos
+  const url = `${API}/observations?taxon_id=${sp.id}&quality_grade=research&photos=true&per_page=24&order_by=votes&locale=es`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const obs = data.results || [];
+
+    // Collect unique photos (url + attribution)
+    const seen = new Set();
+    galleryPhotos = [];
+    // Always include the taxon's default photo first
+    if (sp.photo) {
+      const large = sp.photo.replace('medium', 'large');
+      seen.add(large);
+      galleryPhotos.push({ url: large, thumb: sp.photo, attr: '' });
+    }
+    obs.forEach(o => {
+      (o.photos || []).forEach(p => {
+        const large = (p.url || '').replace('square', 'large').replace('medium', 'large');
+        const thumb = (p.url || '').replace('square', 'small').replace('medium', 'small');
+        if (large && !seen.has(large)) {
+          seen.add(large);
+          galleryPhotos.push({ url: large, thumb, attr: p.attribution || '' });
+        }
+      });
+    });
+
+    galleryIndex = 0;
+    renderGallery();
+  } catch(e) {
+    // Fallback: just show the single default photo
+    galleryPhotos = sp.photo ? [{ url: sp.photo.replace('medium','large'), thumb: sp.photo, attr: '' }] : [];
+    galleryIndex = 0;
+    renderGallery();
+  }
+}
+
+function renderGallery() {
+  const wrap = document.getElementById('galleryWrap');
+  if (!wrap) return;
+
+  if (!galleryPhotos.length) {
+    wrap.innerHTML = `<div class="modal-no-photo">📷</div>`;
+    return;
+  }
+
+  const p = galleryPhotos[galleryIndex];
+  const total = galleryPhotos.length;
+
+  wrap.innerHTML = `
+    <img class="gallery-main" id="galleryMain" src="${p.url}" alt=""
+      onerror="this.src='${galleryPhotos[galleryIndex]?.thumb || ''}'"
+    >
+    ${total > 1 ? `<div class="gallery-counter">${galleryIndex + 1} / ${total}</div>` : ''}
+    ${galleryIndex > 0 ? `<button class="gallery-nav prev" id="galleryPrev">‹</button>` : ''}
+    ${galleryIndex < total - 1 ? `<button class="gallery-nav next" id="galleryNext">›</button>` : ''}
+    ${p.attr ? `<div class="gallery-caption">${p.attr}</div>` : ''}
+    ${total > 1 ? `
+      <div class="gallery-thumbs" id="galleryThumbs">
+        ${galleryPhotos.map((ph, i) => `
+          <img class="gallery-thumb ${i === galleryIndex ? 'active' : ''}"
+            src="${ph.thumb}" data-i="${i}" alt=""
+            onerror="this.style.display='none'"
+          >
+        `).join('')}
+      </div>` : ''}
+  `;
+
+  // Listeners
+  document.getElementById('galleryMain')?.addEventListener('click', () => openLightbox(p.url));
+  document.getElementById('galleryPrev')?.addEventListener('click', () => { galleryIndex--; renderGallery(); });
+  document.getElementById('galleryNext')?.addEventListener('click', () => { galleryIndex++; renderGallery(); });
+  document.getElementById('galleryThumbs')?.querySelectorAll('.gallery-thumb').forEach(el => {
+    el.addEventListener('click', () => { galleryIndex = +el.dataset.i; renderGallery(); });
+  });
+
+  // Keyboard nav
+  wrap._keyHandler = e => {
+    if (e.key === 'ArrowLeft'  && galleryIndex > 0)             { galleryIndex--; renderGallery(); }
+    if (e.key === 'ArrowRight' && galleryIndex < galleryPhotos.length - 1) { galleryIndex++; renderGallery(); }
+  };
+  document.removeEventListener('keydown', wrap._keyHandler);
+  document.addEventListener('keydown', wrap._keyHandler);
+
+  // Scroll active thumb into view
+  setTimeout(() => {
+    const activeThumb = document.querySelector('.gallery-thumb.active');
+    activeThumb?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, 50);
+}
+
+// Lightbox
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+document.getElementById('lightbox').addEventListener('click', () => {
+  document.getElementById('lightbox').classList.remove('open');
+});
 
 async function loadMap(sp) {
   try {
@@ -1137,7 +1392,7 @@ async function selectSearchResult(taxon) {
 
   showLoading(`Cargando ${nextRankEs}s de ${taxon.name}…`);
   try {
-    const children = await cachedChildren(taxon.id, nextRank, 100);
+    const children = await cachedChildren(taxon.id, nextRank);
     if (!children.length) throw new Error(`No se encontraron ${nextRankEs}s.`);
 
     // Reset nav and push a single level
@@ -1190,15 +1445,17 @@ async function selectSearchResult(taxon) {
 }
 
 // ─── PLACE FILTER ─────────────────────────────────────────────
-const placeInput    = document.getElementById('placeInput');
-const placeClear    = document.getElementById('placeClear');
-const placeDropdown = document.getElementById('placeDropdown');
-const activePlaceEl = document.getElementById('activePlace');
+const placeInput     = document.getElementById('placeInput');
+const placeClear     = document.getElementById('placeClear');
+const placeDropdown  = document.getElementById('placeDropdown');
+const activePlaceEl  = document.getElementById('activePlace');
 const activePlaceNameEl = document.getElementById('activePlaceName');
 
 let placeTimer = null;
 let placeResults = [];
 let placeFocusIndex = -1;
+let previewMap = null;
+let previewTimer = null;
 
 const PLACE_TYPE_LABELS = {
   0: 'Lugar', 1: 'País', 2: 'Estado', 3: 'Condado', 8: 'Continente',
@@ -1209,12 +1466,25 @@ const PLACE_TYPE_ICONS = {
   1: '🏳️', 2: '📍', 8: '🌍', 9: '🏳️', 10: '🌲', 29: '🏳️',
 };
 
+function ensureDropdownStructure() {
+  if (!document.getElementById('placeResultsList')) {
+    placeDropdown.innerHTML = `
+      <div id="placeResultsList"></div>
+      <div class="place-preview" id="placePreviewInner">
+        <div id="placePreviewMap"></div>
+        <div class="place-preview-label" id="placePreviewLabelInner"></div>
+      </div>
+    `;
+  }
+}
+
 placeInput.addEventListener('input', () => {
   const q = placeInput.value.trim();
   placeClear.classList.toggle('visible', q.length > 0);
   clearTimeout(placeTimer);
   if (q.length < 2) { closePlaceDropdown(); return; }
-  placeDropdown.innerHTML = `<div class="place-msg">Buscando…</div>`;
+  ensureDropdownStructure();
+  document.getElementById('placeResultsList').innerHTML = `<div class="place-msg">Buscando…</div>`;
   placeDropdown.classList.add('open');
   placeTimer = setTimeout(() => searchPlaces(q), 350);
 });
@@ -1225,10 +1495,12 @@ placeInput.addEventListener('keydown', e => {
     e.preventDefault();
     placeFocusIndex = Math.min(placeFocusIndex + 1, items.length - 1);
     items.forEach((el, i) => el.classList.toggle('focused', i === placeFocusIndex));
+    if (placeResults[placeFocusIndex]) showPreview(placeResults[placeFocusIndex]);
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
     placeFocusIndex = Math.max(placeFocusIndex - 1, 0);
     items.forEach((el, i) => el.classList.toggle('focused', i === placeFocusIndex));
+    if (placeResults[placeFocusIndex]) showPreview(placeResults[placeFocusIndex]);
   } else if (e.key === 'Enter' && placeFocusIndex >= 0) {
     selectPlace(placeResults[placeFocusIndex]);
   } else if (e.key === 'Escape') {
@@ -1251,6 +1523,7 @@ function closePlaceDropdown() {
   placeDropdown.classList.remove('open');
   placeDropdown.innerHTML = '';
   placeFocusIndex = -1; placeResults = [];
+  if (previewMap) { previewMap.remove(); previewMap = null; }
 }
 
 async function searchPlaces(q) {
@@ -1262,17 +1535,20 @@ async function searchPlaces(q) {
     placeResults = data.results || [];
     renderPlaceDropdown(placeResults);
   } catch(e) {
-    placeDropdown.innerHTML = `<div class="place-msg">Error al buscar</div>`;
+    ensureDropdownStructure();
+    document.getElementById('placeResultsList').innerHTML = `<div class="place-msg">Error al buscar</div>`;
   }
 }
 
 function renderPlaceDropdown(results) {
   placeFocusIndex = -1;
+  ensureDropdownStructure();
+  const list = document.getElementById('placeResultsList');
   if (!results.length) {
-    placeDropdown.innerHTML = `<div class="place-msg">Sin resultados</div>`;
+    list.innerHTML = `<div class="place-msg">Sin resultados</div>`;
     return;
   }
-  placeDropdown.innerHTML = '';
+  list.innerHTML = '';
   results.forEach((place, i) => {
     const icon = PLACE_TYPE_ICONS[place.place_type] || '📍';
     const type = PLACE_TYPE_LABELS[place.place_type] || 'Lugar';
@@ -1284,23 +1560,104 @@ function renderPlaceDropdown(results) {
       <span class="pr-type">${type}</span>
     `;
     el.addEventListener('mousedown', e => e.preventDefault());
+    el.addEventListener('mouseenter', () => {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => showPreview(place), 180);
+    });
     el.addEventListener('click', () => selectPlace(place));
-    placeDropdown.appendChild(el);
+    list.appendChild(el);
   });
+  // Auto-preview first result
+  if (results[0]) setTimeout(() => showPreview(results[0]), 350);
+}
+
+// Cache de geometrías para no repetir fetches
+const geoCache = {};
+
+function obtenerGeometria(placeId) {
+  if (geoCache[placeId]) return geoCache[placeId];
+  geoCache[placeId] = fetch(`${API}/places/${placeId}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.results || !data.results[0]) return null;
+      return data.results[0].geometry_geojson || null;
+    })
+    .catch(() => null);
+  return geoCache[placeId];
+}
+
+async function showPreview(place) {
+  const previewEl = document.getElementById('placePreviewInner');
+  const mapEl     = document.getElementById('placePreviewMap');
+  const labelEl   = document.getElementById('placePreviewLabelInner');
+  if (!previewEl || !mapEl) return;
+
+  previewEl.classList.add('visible');
+  if (labelEl) labelEl.textContent = place.display_name || place.name;
+
+  // Init Leaflet map once, then invalidate size so tiles render correctly
+  if (!previewMap) {
+    previewMap = L.map('placePreviewMap', {
+      zoomControl: false, attributionControl: false,
+      dragging: false, scrollWheelZoom: false,
+      doubleClickZoom: false, touchZoom: false,
+      center: [20, 0], zoom: 2,
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19
+    }).addTo(previewMap);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19, opacity: 0.7
+    }).addTo(previewMap);
+    // Force Leaflet to recalculate size after the element becomes visible
+    setTimeout(() => previewMap.invalidateSize(), 50);
+  } else {
+    previewMap.invalidateSize();
+  }
+
+  // Remove previous GeoJSON/marker layers
+  previewMap.eachLayer(l => {
+    if (l instanceof L.GeoJSON || l instanceof L.CircleMarker) previewMap.removeLayer(l);
+  });
+
+  // Fetch the real polygon geometry
+  const geojson = await obtenerGeometria(place.id);
+
+  if (geojson) {
+    try {
+      const geo = typeof geojson === 'string' ? JSON.parse(geojson) : geojson;
+      const layer = L.geoJSON(geo, {
+        style: { color: '#58a6ff', weight: 2, fillColor: '#58a6ff', fillOpacity: 0.18 }
+      }).addTo(previewMap);
+      previewMap.fitBounds(layer.getBounds(), { padding: [16, 16] });
+    } catch(e) {
+      // geometry parse failed — fall through to coordinate fallback
+      mostrarPuntoFallback(place);
+    }
+  } else {
+    mostrarPuntoFallback(place);
+  }
+}
+
+function mostrarPuntoFallback(place) {
+  if (!previewMap || !place.location) return;
+  const [lat, lng] = place.location.split(',').map(Number);
+  if (isNaN(lat) || isNaN(lng)) return;
+  previewMap.setView([lat, lng], 5);
+  L.circleMarker([lat, lng], {
+    radius: 8, color: '#58a6ff', fillColor: '#58a6ff', fillOpacity: 0.8, weight: 2
+  }).addTo(previewMap);
 }
 
 function selectPlace(place) {
   activePlaceId = place.id;
   activePlaceName = place.display_name || place.name;
+  clearCache();
   placeInput.value = '';
   placeClear.classList.remove('visible');
   closePlaceDropdown();
-
-  // Show active filter badge
   activePlaceNameEl.textContent = activePlaceName;
   activePlaceEl.classList.add('visible');
-
-  // Reset nav and reload from home with new filter
   navStack.length = 0;
   history.replaceState({ depth: 0 }, '', '');
   repaint();
@@ -1309,12 +1666,12 @@ function selectPlace(place) {
 function clearPlaceFilter() {
   activePlaceId = null;
   activePlaceName = '';
+  clearCache();
   activePlaceEl.classList.remove('visible');
   navStack.length = 0;
   history.replaceState({ depth: 0 }, '', '');
   repaint();
 }
-
 // ─── INIT ─────────────────────────────────────────────────────
 renderHome();
 </script>

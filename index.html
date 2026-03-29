@@ -461,16 +461,32 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   /* Header */
-  header { padding: 0 16px; }
-  .header-inner { height: 54px; gap: 10px; }
-  .logo { font-size: 1.1rem; }
+  header { padding: 0 12px; }
+  .header-inner { height: 54px; gap: 8px; }
+  .logo { font-size: 1rem; }
   .src-badge { display: none; }
-  .search-wrap { max-width: 160px; }
-  .search-input { font-size: 0.8rem; padding: 7px 12px 7px 32px; }
 
-  /* Breadcrumb: only show last 2 items */
+  /* Search: full width dropdown, readable text */
+  .search-wrap { max-width: 180px; }
+  .search-input { font-size: 0.85rem; padding: 7px 28px 7px 32px; }
+  .search-dropdown {
+    position: fixed;
+    top: 54px;
+    left: 0; right: 0;
+    border-radius: 0 0 12px 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+    z-index: 500;
+  }
+  .search-result { padding: 12px 16px; gap: 14px; }
+  .sr-photo, .sr-no-photo { width: 48px; height: 48px; border-radius: 8px; }
+  .sr-name { font-size: 1rem; }
+  .sr-common { font-size: 0.8rem; }
+  .sr-rank { font-size: 0.68rem; }
+
+  /* Breadcrumb */
   .breadcrumb { font-size: 0.72rem; gap: 2px; }
-  .crumb { padding: 2px 5px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+  .crumb { padding: 2px 5px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
   /* Main */
   main { padding: 20px 16px 80px; }
@@ -518,6 +534,25 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
   /* Map smaller on mobile */
   #speciesMap, .map-loading { height: 220px; }
+
+  /* Place dropdown: full width, map visible */
+  .filter-bar { padding: 0 12px; top: 54px; }
+  .filter-inner { height: 44px; gap: 8px; }
+  .filter-label { display: none; }
+  .place-wrap { max-width: 100%; overflow: visible; }
+  .place-dropdown {
+    position: fixed;
+    left: 0; right: 0;
+    top: 98px; /* header + filter bar */
+    border-radius: 0 0 12px 12px;
+    max-height: 75vh;
+    overflow-y: auto;
+    z-index: 300;
+  }
+  .place-result { padding: 12px 16px; font-size: 0.9rem; }
+  .pr-name { font-size: 0.9rem; }
+  .place-preview { height: 220px; }
+  #placePreviewMap { height: 220px; }
 
   /* Loading */
   .loading { padding: 60px 20px; }

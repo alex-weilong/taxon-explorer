@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Taxon Explorer</title>
+<title>BioExplorer</title>
+<meta name="description" content="Explorador taxonómico de biodiversidad">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BioExplorer">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <style>
@@ -145,6 +152,87 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-msg { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.82rem; }
 .loading-sub { color: var(--dim); font-size: 0.7rem; margin-top: 8px; }
+
+/* FILTER BAR */
+.filter-bar {
+  background: rgba(13,17,23,0.93); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; position: sticky; top: 62px; z-index: 99;
+}
+.filter-inner {
+  max-width: 1400px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px;
+  height: 48px;
+}
+.filter-label {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--dim); white-space: nowrap; flex-shrink: 0;
+}
+.place-wrap { position: relative; flex: 1; max-width: 320px; }
+.place-input {
+  width: 100%; padding: 6px 28px 6px 30px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+  outline: none; transition: border-color 0.2s;
+}
+.place-input:focus { border-color: var(--accent2); }
+.place-input::placeholder { color: var(--dim); }
+.place-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; pointer-events: none; }
+.place-clear {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--dim); cursor: pointer;
+  font-size: 0.9rem; display: none; padding: 2px; line-height: 1;
+  transition: color 0.15s;
+}
+.place-clear.visible { display: block; }
+.place-clear:hover { color: var(--text); }
+
+.place-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  overflow: hidden; display: none;
+}
+.place-dropdown.open { display: block; }
+.place-result {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; cursor: pointer;
+  transition: background 0.12s; border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.place-result:last-child { border-bottom: none; }
+.place-result:hover, .place-result.focused { background: var(--surface2); }
+.pr-icon { font-size: 1rem; flex-shrink: 0; }
+.pr-name { flex: 1; color: var(--text); }
+.pr-type { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--dim); text-transform: uppercase; }
+.place-msg { padding: 10px 12px; color: var(--dim); font-family: 'DM Mono', monospace; font-size: 0.72rem; text-align: center; }
+
+.active-place {
+  display: none; align-items: center; gap: 8px;
+  padding: 4px 10px; border-radius: 99px;
+  background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.35);
+  font-size: 0.75rem; font-family: 'DM Mono', monospace; color: var(--accent2);
+}
+.active-place.visible { display: flex; }
+.active-place button {
+  background: none; border: none; color: var(--accent2);
+  cursor: pointer; font-size: 0.85rem; padding: 0; line-height: 1;
+  opacity: 0.7; transition: opacity 0.15s;
+}
+.active-place button:hover { opacity: 1; }
+
+/* MAIN offset when filter bar visible */
+.has-filter main { padding-top: 28px; }
+
+@media (max-width: 768px) {
+  .filter-bar { padding: 0 16px; top: 54px; }
+  .filter-inner { height: 42px; gap: 8px; }
+  .filter-label { display: none; }
+  .place-wrap { max-width: 100%; }
+}
 
 /* SEARCH */
 .search-wrap {
@@ -370,7 +458,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 <header>
   <div class="header-inner">
-    <div class="logo">Taxon <em>Explorer</em></div>
+    <div class="logo">Bio<em>Explorer</em></div>
     <nav class="breadcrumb" id="breadcrumb"></nav>
     <div class="search-wrap" id="searchWrap">
       <span class="search-icon">🔍</span>
@@ -381,6 +469,22 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
     <span class="src-badge">● iNaturalist</span>
   </div>
 </header>
+
+<div class="filter-bar">
+  <div class="filter-inner">
+    <span class="filter-label">📍 Zona</span>
+    <div class="place-wrap" id="placeWrap">
+      <span class="place-icon">🌍</span>
+      <input class="place-input" id="placeInput" type="text" placeholder="Filtrar por país o región…" autocomplete="off" spellcheck="false">
+      <button class="place-clear" id="placeClear">✕</button>
+      <div class="place-dropdown" id="placeDropdown"></div>
+    </div>
+    <div class="active-place" id="activePlace">
+      <span id="activePlaceName"></span>
+      <button id="activePlaceClear" title="Quitar filtro">✕</button>
+    </div>
+  </div>
+</div>
 <main id="main"></main>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -463,22 +567,26 @@ window.addEventListener('popstate', () => {
 history.replaceState({ depth: 0 }, '', '');
 
 // ─── iNATURALIST API ──────────────────────────────────────────
-// Base URL for the API
 const API = 'https://api.inaturalist.org/v1';
 
+// Active place filter
+let activePlaceId = null;
+let activePlaceName = '';
+
 // Fetch direct children of a taxon at a given rank
-// Uses /taxa endpoint with taxon_id (parent) and rank filter
-async function fetchChildren(parentId, rank, perPage = 50) {
-  const url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=${perPage}&order_by=observations_count&locale=es`;
+async function fetchChildren(parentId, rank, perPage = 50, placeId = null) {
+  let url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=${perPage}&order_by=observations_count&locale=es`;
+  if (placeId) url += `&place_id=${placeId}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
   return data.results || [];
 }
 
-// Fetch species under a taxon, including photo info
-async function fetchSpecies(parentId, perPage = 100) {
-  const url = `${API}/taxa?taxon_id=${parentId}&rank=species&per_page=${perPage}&order_by=observations_count&locale=es`;
+// Fetch species under a taxon
+async function fetchSpecies(parentId, perPage = 100, placeId = null) {
+  let url = `${API}/taxa?taxon_id=${parentId}&rank=species&per_page=${perPage}&order_by=observations_count&locale=es`;
+  if (placeId) url += `&place_id=${placeId}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
@@ -493,16 +601,16 @@ async function fetchSpecies(parentId, perPage = 100) {
   }));
 }
 
-// Cache per taxonId+rank
+// Cache includes place_id in key so filters don't collide
 const childCache = {};
 async function cachedChildren(parentId, rank, perPage) {
-  const key = `${parentId}_${rank}`;
-  if (!childCache[key]) childCache[key] = fetchChildren(parentId, rank, perPage);
+  const key = `${parentId}_${rank}_${activePlaceId || '0'}`;
+  if (!childCache[key]) childCache[key] = fetchChildren(parentId, rank, perPage, activePlaceId);
   return childCache[key];
 }
 async function cachedSpecies(parentId) {
-  const key = `sp_${parentId}`;
-  if (!childCache[key]) childCache[key] = fetchSpecies(parentId);
+  const key = `sp_${parentId}_${activePlaceId || '0'}`;
+  if (!childCache[key]) childCache[key] = fetchSpecies(parentId, 100, activePlaceId);
   return childCache[key];
 }
 
@@ -1079,6 +1187,132 @@ async function selectSearchResult(taxon) {
   } catch(e) {
     showError('Error al cargar', e.message);
   }
+}
+
+// ─── PLACE FILTER ─────────────────────────────────────────────
+const placeInput    = document.getElementById('placeInput');
+const placeClear    = document.getElementById('placeClear');
+const placeDropdown = document.getElementById('placeDropdown');
+const activePlaceEl = document.getElementById('activePlace');
+const activePlaceNameEl = document.getElementById('activePlaceName');
+
+let placeTimer = null;
+let placeResults = [];
+let placeFocusIndex = -1;
+
+const PLACE_TYPE_LABELS = {
+  0: 'Lugar', 1: 'País', 2: 'Estado', 3: 'Condado', 8: 'Continente',
+  9: 'País', 10: 'Parque', 12: 'País', 13: 'Región', 14: 'Océano',
+  24: 'Comarca', 29: 'País', 100: 'Comunidad', 101: 'Condado', 102: 'Ciudad',
+};
+const PLACE_TYPE_ICONS = {
+  1: '🏳️', 2: '📍', 8: '🌍', 9: '🏳️', 10: '🌲', 29: '🏳️',
+};
+
+placeInput.addEventListener('input', () => {
+  const q = placeInput.value.trim();
+  placeClear.classList.toggle('visible', q.length > 0);
+  clearTimeout(placeTimer);
+  if (q.length < 2) { closePlaceDropdown(); return; }
+  placeDropdown.innerHTML = `<div class="place-msg">Buscando…</div>`;
+  placeDropdown.classList.add('open');
+  placeTimer = setTimeout(() => searchPlaces(q), 350);
+});
+
+placeInput.addEventListener('keydown', e => {
+  const items = placeDropdown.querySelectorAll('.place-result');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    placeFocusIndex = Math.min(placeFocusIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('focused', i === placeFocusIndex));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    placeFocusIndex = Math.max(placeFocusIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('focused', i === placeFocusIndex));
+  } else if (e.key === 'Enter' && placeFocusIndex >= 0) {
+    selectPlace(placeResults[placeFocusIndex]);
+  } else if (e.key === 'Escape') {
+    closePlaceDropdown(); placeInput.blur();
+  }
+});
+
+placeClear.addEventListener('click', () => {
+  placeInput.value = ''; placeClear.classList.remove('visible');
+  closePlaceDropdown(); placeInput.focus();
+});
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('placeWrap').contains(e.target)) closePlaceDropdown();
+});
+
+document.getElementById('activePlaceClear').addEventListener('click', clearPlaceFilter);
+
+function closePlaceDropdown() {
+  placeDropdown.classList.remove('open');
+  placeDropdown.innerHTML = '';
+  placeFocusIndex = -1; placeResults = [];
+}
+
+async function searchPlaces(q) {
+  try {
+    const url = `${API}/places/autocomplete?q=${encodeURIComponent(q)}&per_page=8`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    placeResults = data.results || [];
+    renderPlaceDropdown(placeResults);
+  } catch(e) {
+    placeDropdown.innerHTML = `<div class="place-msg">Error al buscar</div>`;
+  }
+}
+
+function renderPlaceDropdown(results) {
+  placeFocusIndex = -1;
+  if (!results.length) {
+    placeDropdown.innerHTML = `<div class="place-msg">Sin resultados</div>`;
+    return;
+  }
+  placeDropdown.innerHTML = '';
+  results.forEach((place, i) => {
+    const icon = PLACE_TYPE_ICONS[place.place_type] || '📍';
+    const type = PLACE_TYPE_LABELS[place.place_type] || 'Lugar';
+    const el = document.createElement('div');
+    el.className = 'place-result';
+    el.innerHTML = `
+      <span class="pr-icon">${icon}</span>
+      <span class="pr-name">${place.display_name || place.name}</span>
+      <span class="pr-type">${type}</span>
+    `;
+    el.addEventListener('mousedown', e => e.preventDefault());
+    el.addEventListener('click', () => selectPlace(place));
+    placeDropdown.appendChild(el);
+  });
+}
+
+function selectPlace(place) {
+  activePlaceId = place.id;
+  activePlaceName = place.display_name || place.name;
+  placeInput.value = '';
+  placeClear.classList.remove('visible');
+  closePlaceDropdown();
+
+  // Show active filter badge
+  activePlaceNameEl.textContent = activePlaceName;
+  activePlaceEl.classList.add('visible');
+
+  // Reset nav and reload from home with new filter
+  navStack.length = 0;
+  history.replaceState({ depth: 0 }, '', '');
+  repaint();
+}
+
+function clearPlaceFilter() {
+  activePlaceId = null;
+  activePlaceName = '';
+  activePlaceEl.classList.remove('visible');
+  navStack.length = 0;
+  history.replaceState({ depth: 0 }, '', '');
+  repaint();
 }
 
 // ─── INIT ─────────────────────────────────────────────────────

@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxon Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --accent: #7ee787;
+  --accent2: #58a6ff;
+  --accent3: #f78166;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --dim: #484f58;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'DM Sans', sans-serif; min-height: 100vh;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(126,231,135,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126,231,135,0.025) 1px, transparent 1px);
+  background-size: 48px 48px; pointer-events: none; z-index: 0;
+}
+
+/* HEADER */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,0.93); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border); padding: 0 40px;
+}
+.header-inner {
+  max-width: 1400px; margin: 0 auto;
+  display: flex; align-items: center; gap: 20px; height: 62px;
+}
+.logo { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.logo em { color: var(--accent); font-style: italic; }
+.breadcrumb {
+  display: flex; align-items: center; gap: 4px;
+  font-family: 'DM Mono', monospace; font-size: 0.78rem;
+  flex: 1; min-width: 0; overflow: hidden;
+}
+.crumb { color: var(--muted); cursor: pointer; padding: 3px 7px; border-radius: 4px; white-space: nowrap; transition: all 0.15s; }
+.crumb:hover { color: var(--text); background: var(--surface2); }
+.crumb.current { color: var(--text); cursor: default; overflow: hidden; text-overflow: ellipsis; }
+.crumb.current:hover { background: none; }
+.crumb-sep { color: var(--dim); flex-shrink: 0; }
+.src-badge {
+  flex-shrink: 0; margin-left: auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 99px; font-size: 0.68rem;
+  font-family: 'DM Mono', monospace;
+  border: 1px solid rgba(126,231,135,0.35);
+  color: var(--accent); background: rgba(126,231,135,0.04);
+}
+
+/* MAIN */
+main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: relative; z-index: 1; }
+
+/* LEVEL HEADER */
+.level-header { margin-bottom: 32px; display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.level-rank {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--dim); border: 1px solid var(--dim);
+  padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px;
+}
+.level-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 3vw, 2.7rem); font-weight: 700; line-height: 1; font-style: italic; }
+.level-sub { color: var(--muted); font-size: 0.83rem; margin-left: auto; font-family: 'DM Mono', monospace; white-space: nowrap; }
+
+/* CARD GRID */
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px; animation: fadeUp 0.3s ease both;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+.taxon-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; cursor: pointer;
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+.taxon-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.4); }
+.tc-arrow { position: absolute; top: 18px; right: 18px; color: var(--dim); font-size: 1rem; transition: transform 0.2s, color 0.2s; }
+.taxon-card:hover .tc-arrow { transform: translateX(4px); color: var(--accent); }
+.tc-rank { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 8px; }
+.tc-name { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.18rem; line-height: 1.2; margin-bottom: 4px; padding-right: 24px; }
+.tc-common { font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; min-height: 1.1em; }
+.tc-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.tc-pill { font-family: 'DM Mono', monospace; font-size: 0.66rem; color: var(--muted); background: var(--surface2); padding: 3px 8px; border-radius: 99px; }
+
+/* SPECIES GRID */
+.species-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 14px; animation: fadeUp 0.3s ease both;
+}
+.sp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: all 0.22s; }
+.sp-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.sp-img-wrap { width: 100%; aspect-ratio: 4/3; overflow: hidden; background: var(--surface2); }
+.sp-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.sp-card:hover .sp-img { transform: scale(1.06); }
+.sp-no-img { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--dim); font-size: 1.8rem; }
+.sp-no-img small { font-size: 0.62rem; font-family: 'DM Mono', monospace; }
+.sp-info { padding: 10px 12px; }
+.sp-sci { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.84rem; color: var(--accent); line-height: 1.3; }
+.sp-common { font-size: 0.72rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-obs { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--dim); margin-top: 6px; }
+
+/* GROUP HOME */
+.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; animation: fadeUp 0.3s ease both; }
+.group-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px 22px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 10px; }
+.group-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,0.4); }
+.group-icon { font-size: 2.2rem; }
+.group-name { font-size: 1rem; font-weight: 500; }
+.group-hint { font-size: 0.7rem; color: var(--dim); font-family: 'DM Mono', monospace; }
+
+/* LOADING */
+.loading { text-align: center; padding: 100px 20px; }
+.spinner { width: 42px; height: 42px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-msg { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.82rem; }
+.loading-sub { color: var(--dim); font-size: 0.7rem; margin-top: 8px; }
+
+/* SEARCH */
+.search-wrap {
+  position: relative; flex: 1; max-width: 340px;
+}
+.search-input {
+  width: 100%; padding: 8px 14px 8px 36px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+  outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--accent2); }
+.search-input::placeholder { color: var(--dim); }
+.search-icon {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%); color: var(--dim);
+  font-size: 0.9rem; pointer-events: none;
+}
+.search-clear {
+  position: absolute; right: 8px; top: 50%;
+  transform: translateY(-50%); color: var(--dim);
+  background: none; border: none; cursor: pointer;
+  font-size: 1rem; display: none; padding: 2px 4px;
+  line-height: 1; border-radius: 4px;
+  transition: color 0.15s;
+}
+.search-clear:hover { color: var(--text); }
+.search-clear.visible { display: block; }
+
+.search-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  overflow: hidden; display: none;
+}
+.search-dropdown.open { display: block; }
+
+.search-result {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; cursor: pointer;
+  transition: background 0.15s; border-bottom: 1px solid var(--border);
+}
+.search-result:last-child { border-bottom: none; }
+.search-result:hover, .search-result.focused { background: var(--surface2); }
+
+.sr-photo {
+  width: 40px; height: 40px; border-radius: 6px;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--surface2);
+}
+.sr-no-photo {
+  width: 40px; height: 40px; border-radius: 6px;
+  background: var(--surface2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+}
+.sr-info { flex: 1; min-width: 0; }
+.sr-name {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: 0.88rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sr-common {
+  font-size: 0.72rem; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sr-rank {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  color: var(--dim); text-transform: uppercase;
+  letter-spacing: 0.08em; flex-shrink: 0;
+}
+.search-msg {
+  padding: 12px 14px; color: var(--dim);
+  font-family: 'DM Mono', monospace; font-size: 0.75rem;
+  text-align: center;
+}
+
+/* ERROR */
+.error-box { text-align: center; padding: 80px 20px; }
+.error-box h3 { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent3); font-size: 1.4rem; margin-bottom: 8px; }
+.error-box p { color: var(--muted); font-size: 0.82rem; font-family: 'DM Mono', monospace; max-width: 480px; margin: 0 auto; }
+.retry-btn { margin-top: 20px; padding: 8px 20px; border: 1px solid var(--accent); color: var(--accent); background: none; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.8rem; transition: all 0.2s; }
+.retry-btn:hover { background: rgba(126,231,135,0.08); }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.82); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.2s; position: relative; }
+.modal-overlay.open .modal { transform: scale(1); }
+.modal-handle { display: none; width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+.modal-photo { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }
+.modal-no-photo { width: 100%; aspect-ratio: 16/9; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 4rem; border-radius: 16px 16px 0 0; }
+.modal-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 2; }
+.modal-close:hover { border-color: var(--accent3); background: rgba(247,129,102,0.15); }
+.modal-body { padding: 28px; }
+.modal-sci { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.8rem; margin-bottom: 6px; }
+.modal-common { color: var(--muted); font-size: 0.92rem; margin-bottom: 20px; }
+.modal-stats { display: flex; gap: 24px; background: var(--surface2); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+.ms-val { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--accent); }
+.ms-key { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.modal-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.modal-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--accent2); color: var(--accent2); text-decoration: none; font-size: 0.78rem; font-family: 'DM Mono', monospace; transition: all 0.2s; }
+.modal-link:hover { background: rgba(88,166,255,0.1); }
+
+/* MAP */
+.map-section { margin-top: 24px; }
+.map-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 8px;
+}
+#speciesMap {
+  width: 100%; height: 280px; border-radius: 10px;
+  border: 1px solid var(--border); overflow: hidden;
+  background: var(--surface2);
+}
+.map-loading {
+  width: 100%; height: 280px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  color: var(--dim); font-family: 'DM Mono', monospace; font-size: 0.75rem;
+}
+.map-spinner {
+  width: 24px; height: 24px; border: 2px solid var(--border);
+  border-top-color: var(--accent2); border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+.map-note {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--dim); margin-top: 6px; text-align: right;
+}
+/* Override Leaflet popup styles */
+.leaflet-popup-content-wrapper {
+  background: var(--surface) !important; border: 1px solid var(--border) !important;
+  border-radius: 8px !important; color: var(--text) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important; font-size: 0.75rem;
+}
+.leaflet-popup-tip { background: var(--surface) !important; }
+.leaflet-popup-content { margin: 8px 12px !important; font-family: 'DM Sans', sans-serif; }
+.leaflet-container { background: #0d1117 !important; }
+.leaflet-tile { filter: brightness(0.7) saturate(0.5); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* Header */
+  header { padding: 0 16px; }
+  .header-inner { height: 54px; gap: 10px; }
+  .logo { font-size: 1.1rem; }
+  .src-badge { display: none; }
+  .search-wrap { max-width: 160px; }
+  .search-input { font-size: 0.8rem; padding: 7px 12px 7px 32px; }
+
+  /* Breadcrumb: only show last 2 items */
+  .breadcrumb { font-size: 0.72rem; gap: 2px; }
+  .crumb { padding: 2px 5px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Main */
+  main { padding: 20px 16px 80px; }
+
+  /* Level header */
+  .level-header { margin-bottom: 20px; gap: 8px; }
+  .level-title { font-size: 1.6rem; }
+  .level-sub { font-size: 0.75rem; width: 100%; margin-left: 0; }
+
+  /* Taxon cards: 2 columns, more compact */
+  .card-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .taxon-card { padding: 14px 12px; border-radius: 10px; }
+  .tc-name { font-size: 1rem; }
+  .tc-common { font-size: 0.72rem; margin-bottom: 10px; }
+  .tc-pill { font-size: 0.6rem; padding: 2px 6px; }
+  .tc-arrow { top: 12px; right: 12px; font-size: 0.85rem; }
+
+  /* Group home: 2 columns */
+  .group-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .group-card { padding: 20px 14px; border-radius: 12px; }
+  .group-icon { font-size: 1.8rem; }
+  .group-name { font-size: 0.9rem; }
+
+  /* Species: 2 columns */
+  .species-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sp-info { padding: 8px 10px; }
+  .sp-sci { font-size: 0.78rem; }
+  .sp-common { font-size: 0.68rem; }
+
+  /* Modal: full screen on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    transform: translateY(20px);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle { display: block; }
+  .modal-body { padding: 20px 16px 32px; }
+  .modal-sci { font-size: 1.4rem; }
+  .modal-close { top: 12px; right: 12px; }
+
+  /* Map smaller on mobile */
+  #speciesMap, .map-loading { height: 220px; }
+
+  /* Loading */
+  .loading { padding: 60px 20px; }
+}
+
+@media (max-width: 380px) {
+  .card-grid { grid-template-columns: 1fr; }
+  .species-grid { grid-template-columns: 1fr 1fr; }
+  .group-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Taxon <em>Explorer</em></div>
+    <nav class="breadcrumb" id="breadcrumb"></nav>
+    <div class="search-wrap" id="searchWrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Buscar taxón…" autocomplete="off" spellcheck="false">
+      <button class="search-clear" id="searchClear">✕</button>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <span class="src-badge">● iNaturalist</span>
+  </div>
+</header>
+<main id="main"></main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalSheet">
+    <div class="modal-handle"></div>
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────
+const GROUPS = [
+  { id: 'reptilia',       name: 'Reptiles',   icon: '🦎', taxonId: 26036  },
+  { id: 'aves',           name: 'Aves',        icon: '🦅', taxonId: 3      },
+  { id: 'mammalia',       name: 'Mamíferos',   icon: '🦁', taxonId: 40151  },
+  { id: 'amphibia',       name: 'Anfibios',    icon: '🐸', taxonId: 20978  },
+  { id: 'arachnida',      name: 'Arácnidos',   icon: '🕷️', taxonId: 47119  },
+  { id: 'insecta',        name: 'Insectos',    icon: '🦋', taxonId: 47158  },
+  { id: 'actinopterygii', name: 'Peces',       icon: '🐠', taxonId: 47178  },
+  { id: 'plantae',        name: 'Plantas',     icon: '🌿', taxonId: 47126  },
+];
+
+// iNaturalist rank IDs (used as next_rank lookup)
+const RANK_SEQUENCE = ['order', 'family', 'genus', 'species'];
+
+// ─── NAV STATE ─────────────────────────────────────────────────
+const navStack = []; // { label, renderFn }
+
+function pushNav(label, renderFn) {
+  navStack.push({ label, renderFn });
+  repaint();
+}
+function goToNav(index) {
+  if (index < 0) navStack.length = 0;
+  else navStack.splice(index + 1);
+  repaint();
+}
+function repaint() {
+  renderBreadcrumb();
+  navStack.length === 0 ? renderHome() : navStack[navStack.length - 1].renderFn();
+}
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  if (!navStack.length) { bc.innerHTML = ''; return; }
+  let html = `<span class="crumb" onclick="goToNav(-1)">Inicio</span>`;
+  navStack.forEach((item, i) => {
+    html += `<span class="crumb-sep">/</span>`;
+    if (i < navStack.length - 1)
+      html += `<span class="crumb" onclick="goToNav(${i})">${item.label}</span>`;
+    else
+      html += `<span class="crumb current">${item.label}</span>`;
+  });
+  bc.innerHTML = html;
+}
+
+// ─── iNATURALIST API ──────────────────────────────────────────
+// Base URL for the API
+const API = 'https://api.inaturalist.org/v1';
+
+// Fetch direct children of a taxon at a given rank
+// Uses /taxa endpoint with taxon_id (parent) and rank filter
+async function fetchChildren(parentId, rank, perPage = 50) {
+  const url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=${perPage}&order_by=observations_count&locale=es`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const data = await res.json();
+  return data.results || [];
+}
+
+// Fetch species under a taxon, including photo info
+async function fetchSpecies(parentId, perPage = 100) {
+  const url = `${API}/taxa?taxon_id=${parentId}&rank=species&per_page=${perPage}&order_by=observations_count&locale=es`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const data = await res.json();
+  return (data.results || []).map(sp => ({
+    id: sp.id,
+    name: sp.name,
+    common: sp.preferred_common_name || '',
+    photo: sp.default_photo?.medium_url || sp.default_photo?.url || null,
+    observations: sp.observations_count || 0,
+    inatUrl: `https://www.inaturalist.org/taxa/${sp.id}`,
+    wikipedia: sp.wikipedia_url || null,
+  }));
+}
+
+// Cache per taxonId+rank
+const childCache = {};
+async function cachedChildren(parentId, rank, perPage) {
+  const key = `${parentId}_${rank}`;
+  if (!childCache[key]) childCache[key] = fetchChildren(parentId, rank, perPage);
+  return childCache[key];
+}
+async function cachedSpecies(parentId) {
+  const key = `sp_${parentId}`;
+  if (!childCache[key]) childCache[key] = fetchSpecies(parentId);
+  return childCache[key];
+}
+
+// ─── HOME ──────────────────────────────────────────────────────
+function renderHome() {
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Explorador</div>
+        <div class="level-title">Grupos taxonómicos</div>
+      </div>
+    </div>
+    <div class="group-grid" id="groupGrid"></div>
+  `;
+  GROUPS.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.innerHTML = `
+      <div class="group-icon">${g.icon}</div>
+      <div class="group-name">${g.name}</div>
+      <div class="group-hint">explorar órdenes →</div>
+    `;
+    card.addEventListener('click', () => enterGroup(g));
+    document.getElementById('groupGrid').appendChild(card);
+  });
+}
+
+// ─── ENTER GROUP → fetch orders ────────────────────────────────
+async function enterGroup(group) {
+  showLoading(`Cargando órdenes de ${group.name}…`);
+  try {
+    const orders = await cachedChildren(group.taxonId, 'order', 50);
+    if (!orders.length) throw new Error('No se encontraron órdenes. Intenta con otro grupo.');
+    pushNav(group.name, () => showOrders(group, orders));
+  } catch(e) {
+    showError('Error al cargar', e.message, () => enterGroup(group));
+  }
+}
+
+// ─── LEVEL: ORDERS ────────────────────────────────────────────
+function showOrders(group, orders) {
+  const sorted = [...orders].sort((a, b) => a.name.localeCompare(b.name));
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Clase</div>
+        <div class="level-title">${group.icon} ${group.name}</div>
+      </div>
+      <div class="level-sub">${sorted.length} órdenes</div>
+    </div>
+    <div class="card-grid" id="grid"></div>
+  `;
+  sorted.forEach(order => {
+    const card = makeCard('Orden', order.name, order.preferred_common_name || '', [
+      formatCount(order.observations_count) + ' obs.'
+    ]);
+    card.addEventListener('click', () => enterOrder(order));
+    document.getElementById('grid').appendChild(card);
+  });
+}
+
+async function enterOrder(order) {
+  showLoading(`Cargando familias de ${order.name}…`);
+  try {
+    const families = await cachedChildren(order.id, 'family', 50);
+    if (!families.length) throw new Error('No se encontraron familias.');
+    pushNav(order.name, () => showFamilies(order, families));
+  } catch(e) {
+    showError('Error al cargar', e.message, () => enterOrder(order));
+  }
+}
+
+// ─── LEVEL: FAMILIES ──────────────────────────────────────────
+function showFamilies(order, families) {
+  const sorted = [...families].sort((a, b) => a.name.localeCompare(b.name));
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Orden</div>
+        <div class="level-title">${order.name}</div>
+      </div>
+      <div class="level-sub">${sorted.length} familias</div>
+    </div>
+    <div class="card-grid" id="grid"></div>
+  `;
+  sorted.forEach(fam => {
+    const card = makeCard('Familia', fam.name, fam.preferred_common_name || '', [
+      formatCount(fam.observations_count) + ' obs.'
+    ]);
+    card.addEventListener('click', () => enterFamily(fam));
+    document.getElementById('grid').appendChild(card);
+  });
+}
+
+async function enterFamily(fam) {
+  showLoading(`Cargando géneros de ${fam.name}…`);
+  try {
+    const genera = await cachedChildren(fam.id, 'genus', 50);
+    if (!genera.length) throw new Error('No se encontraron géneros.');
+    pushNav(fam.name, () => showGenera(fam, genera));
+  } catch(e) {
+    showError('Error al cargar', e.message, () => enterFamily(fam));
+  }
+}
+
+// ─── LEVEL: GENERA ────────────────────────────────────────────
+function showGenera(fam, genera) {
+  const sorted = [...genera].sort((a, b) => a.name.localeCompare(b.name));
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Familia</div>
+        <div class="level-title">${fam.name}</div>
+      </div>
+      <div class="level-sub">${sorted.length} géneros</div>
+    </div>
+    <div class="card-grid" id="grid"></div>
+  `;
+  sorted.forEach(genus => {
+    const card = makeCard('Género', genus.name, genus.preferred_common_name || '', [
+      formatCount(genus.observations_count) + ' obs.'
+    ]);
+    card.addEventListener('click', () => enterGenus(genus));
+    document.getElementById('grid').appendChild(card);
+  });
+}
+
+async function enterGenus(genus) {
+  showLoading(`Cargando especies de ${genus.name}…`);
+  try {
+    const species = await cachedSpecies(genus.id);
+    if (!species.length) throw new Error('No se encontraron especies.');
+    pushNav(genus.name, () => showSpecies(genus, species));
+  } catch(e) {
+    showError('Error al cargar', e.message, () => enterGenus(genus));
+  }
+}
+
+// ─── LEVEL: SPECIES ───────────────────────────────────────────
+function showSpecies(genus, species) {
+  const sorted = [...species].sort((a, b) => a.name.localeCompare(b.name));
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Género</div>
+        <div class="level-title">${genus.name}</div>
+      </div>
+      <div class="level-sub">${sorted.length} especies</div>
+    </div>
+    <div class="species-grid" id="grid"></div>
+  `;
+  const grid = document.getElementById('grid');
+  sorted.forEach(sp => {
+    const card = document.createElement('div');
+    card.className = 'sp-card';
+    const img = sp.photo
+      ? `<img class="sp-img" src="${sp.photo}" alt="${sp.name}" loading="lazy"
+           onerror="this.parentElement.innerHTML='<div class=\\'sp-no-img\\'><span>📷</span><small>sin foto</small></div>'">`
+      : `<div class="sp-no-img"><span>📷</span><small>sin foto</small></div>`;
+    card.innerHTML = `
+      <div class="sp-img-wrap">${img}</div>
+      <div class="sp-info">
+        <div class="sp-sci">${sp.name}</div>
+        ${sp.common ? `<div class="sp-common">${sp.common}</div>` : ''}
+        <div class="sp-obs">${formatCount(sp.observations)} obs.</div>
+      </div>
+    `;
+    card.addEventListener('click', () => openModal(sp));
+    grid.appendChild(card);
+  });
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function makeCard(rank, name, common, pills) {
+  const card = document.createElement('div');
+  card.className = 'taxon-card';
+  card.innerHTML = `
+    <span class="tc-arrow">→</span>
+    <div class="tc-rank">${rank}</div>
+    <div class="tc-name">${name}</div>
+    <div class="tc-common">${common}</div>
+    <div class="tc-meta">${pills.map(p => `<span class="tc-pill">${p}</span>`).join('')}</div>
+  `;
+  return card;
+}
+
+function formatCount(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(0) + 'k';
+  return n.toString();
+}
+
+// ─── MODAL ────────────────────────────────────────────────────
+let currentMap = null;
+
+function openModal(sp) {
+  const photo = sp.photo
+    ? `<img class="modal-photo" src="${sp.photo}" alt="${sp.name}"
+         onerror="this.outerHTML='<div class=\\'modal-no-photo\\'>📷</div>'">`
+    : `<div class="modal-no-photo">📷</div>`;
+
+  document.getElementById('modalContent').innerHTML = `
+    ${photo}
+    <div class="modal-body">
+      <div class="modal-sci">${sp.name}</div>
+      ${sp.common ? `<div class="modal-common">${sp.common}</div>` : ''}
+      <div class="modal-stats">
+        <div>
+          <div class="ms-val">${(sp.observations || 0).toLocaleString()}</div>
+          <div class="ms-key">Observaciones</div>
+        </div>
+      </div>
+      <div class="modal-links">
+        <a class="modal-link" href="${sp.inatUrl}" target="_blank">🌿 Ver en iNaturalist</a>
+        ${sp.wikipedia ? `<a class="modal-link" href="${sp.wikipedia}" target="_blank">📖 Wikipedia</a>` : ''}
+      </div>
+      <div class="map-section">
+        <div class="map-label">Distribución · observaciones verificadas</div>
+        <div class="map-loading" id="mapLoading">
+          <div class="map-spinner"></div>
+          <span>Cargando observaciones…</span>
+        </div>
+        <div id="speciesMap" style="display:none"></div>
+        <div class="map-note" id="mapNote"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Destroy previous map instance
+  if (currentMap) { currentMap.remove(); currentMap = null; }
+
+  // Load map after a tick so the DOM is ready
+  setTimeout(() => loadMap(sp), 50);
+}
+
+async function loadMap(sp) {
+  try {
+    // Fetch up to 200 research-grade observations with coordinates
+    const url = `https://api.inaturalist.org/v1/observations?taxon_id=${sp.id}&quality_grade=research&geo=true&per_page=200&order_by=observed_on&locale=es`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('no data');
+    const data = await res.json();
+    const obs = (data.results || []).filter(o => o.geojson);
+
+    if (!obs.length) {
+      document.getElementById('mapLoading').innerHTML = '<span style="color:var(--dim)">Sin observaciones geolocalizadas</span>';
+      return;
+    }
+
+    // Show map, hide loader
+    document.getElementById('mapLoading').style.display = 'none';
+    const mapEl = document.getElementById('speciesMap');
+    mapEl.style.display = 'block';
+
+    // Init Leaflet map
+    const map = L.map('speciesMap', {
+      zoom: 2, center: [20, 0],
+      zoomControl: true, attributionControl: false,
+    });
+    currentMap = map;
+
+    // Dark tile layer (CartoDB dark matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19
+    }).addTo(map);
+
+    // Labels on top
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19, opacity: 0.6
+    }).addTo(map);
+
+    // Custom circle marker
+    const markerStyle = {
+      radius: 5, fillColor: '#7ee787', color: '#0d1117',
+      weight: 1, opacity: 0.9, fillOpacity: 0.7
+    };
+
+    const bounds = [];
+    obs.forEach(o => {
+      const [lng, lat] = o.geojson.coordinates;
+      bounds.push([lat, lng]);
+      const marker = L.circleMarker([lat, lng], markerStyle).addTo(map);
+      const date = o.observed_on ? o.observed_on.slice(0, 10) : 'fecha desconocida';
+      const place = o.place_guess || '';
+      marker.bindPopup(`
+        <div style="font-style:italic;margin-bottom:2px">${sp.name}</div>
+        <div style="color:var(--muted)">${place}</div>
+        <div style="color:var(--dim);margin-top:2px">${date}</div>
+      `);
+    });
+
+    // Fit map to observations
+    if (bounds.length) map.fitBounds(bounds, { padding: [20, 20], maxZoom: 7 });
+
+    document.getElementById('mapNote').textContent =
+      `${obs.length} observaciones verificadas · iNaturalist`;
+
+  } catch(e) {
+    document.getElementById('mapLoading').innerHTML =
+      '<span style="color:var(--dim)">No se pudo cargar el mapa</span>';
+  }
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  if (currentMap) { currentMap.remove(); currentMap = null; }
+}
+
+// ─── SWIPE DOWN TO CLOSE (mobile) ─────────────────────────────
+(function() {
+  const sheet = document.getElementById('modalSheet');
+  let startY = 0, isDragging = false;
+
+  sheet.addEventListener('touchstart', e => {
+    // Only drag from the handle area or top 60px
+    if (e.target.classList.contains('modal-handle') || e.touches[0].clientY - sheet.getBoundingClientRect().top < 60) {
+      startY = e.touches[0].clientY;
+      isDragging = true;
+      sheet.style.transition = 'none';
+    }
+  }, { passive: true });
+
+  sheet.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    const dy = Math.max(0, e.touches[0].clientY - startY);
+    sheet.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+
+  sheet.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.style.transition = '';
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy > 120) {
+      closeModal();
+    } else {
+      sheet.style.transform = '';
+    }
+  });
+})();
+
+// ─── LOADING / ERROR ──────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('main').innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <p class="loading-msg">${msg}</p>
+      <p class="loading-sub">vía iNaturalist API</p>
+    </div>
+  `;
+}
+function showError(title, detail, retryFn) {
+  document.getElementById('main').innerHTML = `
+    <div class="error-box">
+      <h3>${title}</h3>
+      <p>${detail}</p>
+      ${retryFn ? `<button class="retry-btn" id="retryBtn">↺ Reintentar</button>` : ''}
+    </div>
+  `;
+  if (retryFn) document.getElementById('retryBtn').addEventListener('click', retryFn);
+}
+
+// ─── SEARCH ───────────────────────────────────────────────────
+const RANK_ICONS = {
+  kingdom: '🌍', phylum: '🔬', class: '📦', order: '📋',
+  family: '🏠', genus: '🔤', species: '🌿', subspecies: '🔬',
+};
+const RANK_ES = {
+  kingdom: 'Reino', phylum: 'Filo', class: 'Clase', order: 'Orden',
+  family: 'Familia', genus: 'Género', species: 'Especie', subspecies: 'Subespecie',
+};
+
+let searchTimer = null;
+let searchFocusIndex = -1;
+let searchResults = [];
+
+const searchInput   = document.getElementById('searchInput');
+const searchDropdown = document.getElementById('searchDropdown');
+const searchClear   = document.getElementById('searchClear');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  searchClear.classList.toggle('visible', q.length > 0);
+  clearTimeout(searchTimer);
+  if (q.length < 2) { closeDropdown(); return; }
+  searchDropdown.innerHTML = `<div class="search-msg">Buscando…</div>`;
+  searchDropdown.classList.add('open');
+  searchTimer = setTimeout(() => doSearch(q), 300);
+});
+
+searchInput.addEventListener('keydown', e => {
+  const items = searchDropdown.querySelectorAll('.search-result');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchFocusIndex = Math.min(searchFocusIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('focused', i === searchFocusIndex));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchFocusIndex = Math.max(searchFocusIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('focused', i === searchFocusIndex));
+  } else if (e.key === 'Enter') {
+    if (searchFocusIndex >= 0 && searchResults[searchFocusIndex]) {
+      selectSearchResult(searchResults[searchFocusIndex]);
+    }
+  } else if (e.key === 'Escape') {
+    closeDropdown();
+    searchInput.blur();
+  }
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  closeDropdown();
+  searchInput.focus();
+});
+
+// Close when clicking outside
+document.addEventListener('click', e => {
+  if (!document.getElementById('searchWrap').contains(e.target)) closeDropdown();
+});
+
+function closeDropdown() {
+  searchDropdown.classList.remove('open');
+  searchDropdown.innerHTML = '';
+  searchFocusIndex = -1;
+  searchResults = [];
+}
+
+async function doSearch(q) {
+  try {
+    const url = `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(q)}&per_page=10&locale=es`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    searchResults = data.results || [];
+    renderDropdown(searchResults, q);
+  } catch(e) {
+    searchDropdown.innerHTML = `<div class="search-msg">Error al buscar</div>`;
+  }
+}
+
+function renderDropdown(results, q) {
+  searchFocusIndex = -1;
+  if (!results.length) {
+    searchDropdown.innerHTML = `<div class="search-msg">Sin resultados para "${q}"</div>`;
+    return;
+  }
+  searchDropdown.innerHTML = '';
+  results.forEach((taxon, i) => {
+    const photo = taxon.default_photo?.square_url;
+    const rank  = taxon.rank || '';
+    const icon  = RANK_ICONS[rank] || '🔬';
+    const rankEs = RANK_ES[rank] || rank;
+
+    const el = document.createElement('div');
+    el.className = 'search-result';
+    el.innerHTML = `
+      ${photo
+        ? `<img class="sr-photo" src="${photo}" alt="" onerror="this.outerHTML='<div class=\\'sr-no-photo\\'>${icon}</div>'">`
+        : `<div class="sr-no-photo">${icon}</div>`}
+      <div class="sr-info">
+        <div class="sr-name">${taxon.name}</div>
+        ${taxon.preferred_common_name ? `<div class="sr-common">${taxon.preferred_common_name}</div>` : ''}
+      </div>
+      <span class="sr-rank">${rankEs}</span>
+    `;
+    el.addEventListener('mousedown', e => e.preventDefault()); // prevent input blur
+    el.addEventListener('click', () => selectSearchResult(taxon));
+    searchDropdown.appendChild(el);
+  });
+}
+
+async function selectSearchResult(taxon) {
+  closeDropdown();
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+
+  const rank = taxon.rank;
+
+  // If species → open modal directly
+  if (rank === 'species' || rank === 'subspecies') {
+    const sp = {
+      id: taxon.id,
+      name: taxon.name,
+      common: taxon.preferred_common_name || '',
+      photo: taxon.default_photo?.medium_url || taxon.default_photo?.url || null,
+      observations: taxon.observations_count || 0,
+      inatUrl: `https://www.inaturalist.org/taxa/${taxon.id}`,
+      wikipedia: taxon.wikipedia_url || null,
+    };
+    openModal(sp);
+    return;
+  }
+
+  // Otherwise navigate into that taxon as a level
+  const nextRank = { order: 'family', family: 'genus', genus: 'species', class: 'order', phylum: 'order', kingdom: 'class' }[rank] || 'species';
+  const rankEs = RANK_ES[rank] || rank;
+  const nextRankEs = RANK_ES[nextRank] || nextRank;
+
+  showLoading(`Cargando ${nextRankEs}s de ${taxon.name}…`);
+  try {
+    const children = await cachedChildren(taxon.id, nextRank, 100);
+    if (!children.length) throw new Error(`No se encontraron ${nextRankEs}s.`);
+
+    // Reset nav and push a single level
+    navStack.length = 0;
+    pushNav(taxon.name, () => {
+      const sorted = [...children].sort((a, b) => a.name.localeCompare(b.name));
+      const m = document.getElementById('main');
+      m.innerHTML = `
+        <div class="level-header">
+          <div>
+            <div class="level-rank">${rankEs}</div>
+            <div class="level-title">${taxon.name}</div>
+          </div>
+          <div class="level-sub">${sorted.length} ${nextRankEs}s</div>
+        </div>
+        <div class="card-grid" id="grid"></div>
+      `;
+      sorted.forEach(child => {
+        const childNextRank = { order: 'family', family: 'genus', genus: 'species' }[nextRank];
+        const card = makeCard(nextRankEs, child.name, child.preferred_common_name || '', [
+          formatCount(child.observations_count) + ' obs.'
+        ]);
+        card.addEventListener('click', () => {
+          if (nextRank === 'genus') {
+            enterGenus(child);
+          } else if (nextRank === 'family') {
+            enterFamily(child);
+          } else if (nextRank === 'order') {
+            enterOrder(child);
+          } else if (nextRank === 'species') {
+            // treat as species card
+            const sp = {
+              id: child.id, name: child.name,
+              common: child.preferred_common_name || '',
+              photo: child.default_photo?.medium_url || null,
+              observations: child.observations_count || 0,
+              inatUrl: `https://www.inaturalist.org/taxa/${child.id}`,
+              wikipedia: child.wikipedia_url || null,
+            };
+            openModal(sp);
+          }
+        });
+        document.getElementById('grid').appendChild(card);
+      });
+    });
+  } catch(e) {
+    showError('Error al cargar', e.message);
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>

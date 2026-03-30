@@ -394,7 +394,93 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
   justify-content: center; background: var(--surface2);
   border-radius: 16px 16px 0 0;
 }
-/* Lightbox */
+/* AUTH BUTTON */
+.auth-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 12px 5px 5px; border-radius: 99px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); cursor: pointer; flex-shrink: 0;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  transition: all 0.2s; white-space: nowrap;
+}
+.auth-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.auth-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  border: 1px solid var(--border); display: none; flex-shrink: 0;
+}
+.auth-google-icon { font-size: 1rem; flex-shrink: 0; }
+
+/* SEEN SPECIES SYSTEM */
+.seen-btn {
+  position: absolute; bottom: 8px; right: 8px; z-index: 2;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  color: rgba(255,255,255,0.7); font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.seen-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,0,0,0.6); }
+.seen-btn.seen { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+.sp-card.seen-card { border-color: rgba(126,231,135,0.4); }
+.sp-card.seen-card .sp-img-wrap::after {
+  content: '✓';
+  position: absolute; top: 6px; right: 6px;
+  background: var(--accent); color: #0d1117;
+  border-radius: 50%; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+}
+.sp-img-wrap { position: relative; }
+
+/* My species counter badge in header */
+.my-species-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 99px;
+  background: rgba(126,231,135,0.08);
+  border: 1px solid rgba(126,231,135,0.3);
+  color: var(--accent); cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  transition: all 0.2s; flex-shrink: 0; white-space: nowrap;
+}
+.my-species-btn:hover { background: rgba(126,231,135,0.15); border-color: var(--accent); }
+.my-species-count { font-size: 0.85rem; font-weight: 700; }
+
+/* My species page */
+.my-species-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 28px;
+}
+.my-species-stats {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
+}
+.ms-stat { display: flex; flex-direction: column; gap: 2px; }
+.ms-stat-val { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--accent); font-weight: 700; }
+.ms-stat-key { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.clear-all-btn {
+  padding: 7px 14px; border-radius: 6px;
+  border: 1px solid var(--accent3); color: var(--accent3);
+  background: none; cursor: pointer; font-size: 0.75rem;
+  font-family: 'DM Mono', monospace; transition: all 0.2s;
+}
+.clear-all-btn:hover { background: rgba(247,129,102,0.1); }
+
+/* Modal seen button */
+.modal-seen-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 8px;
+  border: 1px solid var(--accent); color: var(--accent);
+  background: none; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.78rem;
+  transition: all 0.2s; margin-top: 16px; width: 100%;
+  justify-content: center;
+}
+.modal-seen-btn:hover { background: rgba(126,231,135,0.1); }
+.modal-seen-btn.seen { background: var(--accent); color: #0d1117; }
+.modal-seen-btn.seen:hover { background: #5bc96a; }
 .lightbox {
   position: fixed; inset: 0; z-index: 2000;
   background: rgba(0,0,0,0.95); display: flex;
@@ -578,6 +664,14 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
       <div class="search-dropdown" id="searchDropdown"></div>
     </div>
     <span class="src-badge">● iNaturalist</span>
+    <button class="my-species-btn" id="mySpeciesBtn">
+      👁 <span class="my-species-count" id="mySpeciesCount">0</span>
+    </button>
+    <button class="auth-btn" id="authBtn">
+      <div class="auth-avatar" id="authAvatar"></div>
+      <span class="auth-google-icon">G</span>
+      <span class="auth-label">Entrar</span>
+    </button>
     <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--dim);flex-shrink:0">by @alex_weilong</span>
   </div>
 </header>
@@ -615,7 +709,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script>
+<script type="module">
 // ─── CONFIG ────────────────────────────────────────────────────
 const GROUPS = [
   { id: 'reptilia',       name: 'Reptiles',   icon: '🦎', taxonId: 26036  },
@@ -655,15 +749,18 @@ function repaint() {
 function renderBreadcrumb() {
   const bc = document.getElementById('breadcrumb');
   if (!navStack.length) { bc.innerHTML = ''; return; }
-  let html = `<span class="crumb" onclick="goToNav(-1)">Inicio</span>`;
+  let html = `<span class="crumb" data-nav="-1">Inicio</span>`;
   navStack.forEach((item, i) => {
     html += `<span class="crumb-sep">/</span>`;
     if (i < navStack.length - 1)
-      html += `<span class="crumb" onclick="goToNav(${i})">${item.label}</span>`;
+      html += `<span class="crumb" data-nav="${i}">${item.label}</span>`;
     else
       html += `<span class="crumb current">${item.label}</span>`;
   });
   bc.innerHTML = html;
+  bc.querySelectorAll('.crumb[data-nav]').forEach(el => {
+    el.addEventListener('click', () => goToNav(parseInt(el.dataset.nav)));
+  });
 }
 
 // Intercept the browser back/forward buttons
@@ -962,19 +1059,36 @@ function showSpecies(genus, species) {
   const grid = document.getElementById('grid');
   sorted.forEach(sp => {
     const card = document.createElement('div');
-    card.className = 'sp-card';
+    card.className = 'sp-card' + (isSeen(sp.id) ? ' seen-card' : '');
+    card.dataset.spId = sp.id;
     const img = sp.photo
       ? `<img class="sp-img" src="${sp.photo}" alt="${sp.name}" loading="lazy"
            onerror="this.parentElement.innerHTML='<div class=\\'sp-no-img\\'><span>📷</span><small>sin foto</small></div>'">`
       : `<div class="sp-no-img"><span>📷</span><small>sin foto</small></div>`;
     card.innerHTML = `
-      <div class="sp-img-wrap">${img}</div>
+      <div class="sp-img-wrap">
+        ${img}
+        <button class="seen-btn ${isSeen(sp.id) ? 'seen' : ''}" title="${isSeen(sp.id) ? 'Vista — clic para desmarcar' : 'Marcar como vista'}">
+          ${isSeen(sp.id) ? '✓' : '○'}
+        </button>
+      </div>
       <div class="sp-info">
         <div class="sp-sci">${sp.name}</div>
         ${sp.common ? `<div class="sp-common">${sp.common}</div>` : ''}
         <div class="sp-obs">${formatCount(sp.observations)} obs.</div>
       </div>
     `;
+    // Seen button — stop propagation so it doesn't open the modal
+    card.querySelector('.seen-btn').addEventListener('click', async e => {
+      e.stopPropagation();
+      await toggleSeen(sp);
+      const btn = card.querySelector('.seen-btn');
+      const seen = isSeen(sp.id);
+      btn.classList.toggle('seen', seen);
+      btn.textContent = seen ? '✓' : '○';
+      btn.title = seen ? 'Vista — clic para desmarcar' : 'Marcar como vista';
+      card.classList.toggle('seen-card', seen);
+    });
     card.addEventListener('click', () => openModal(sp));
     grid.appendChild(card);
   });
@@ -1035,6 +1149,9 @@ function openModal(sp) {
         <a class="modal-link" href="${sp.inatUrl}" target="_blank">🌿 Ver en iNaturalist</a>
         ${sp.wikipedia ? `<a class="modal-link" href="${sp.wikipedia}" target="_blank">📖 Wikipedia</a>` : ''}
       </div>
+      <button class="modal-seen-btn ${isSeen(sp.id) ? 'seen' : ''}" id="modalSeenBtn">
+        ${isSeen(sp.id) ? '✓ Vista' : '○ Marcar como vista'}
+      </button>
       <div class="map-section">
         <div class="map-label">Distribución · observaciones verificadas</div>
         <div class="map-loading" id="mapLoading">
@@ -1051,7 +1168,24 @@ function openModal(sp) {
   document.body.style.overflow = 'hidden';
   if (currentMap) { currentMap.remove(); currentMap = null; }
 
-  // Load gallery and map in parallel
+  // Wire seen button
+  setTimeout(() => {
+    const btn = document.getElementById('modalSeenBtn');
+    if (btn) btn.addEventListener('click', async () => {
+      await toggleSeen(sp);
+      const seen = isSeen(sp.id);
+      btn.classList.toggle('seen', seen);
+      btn.textContent = seen ? '✓ Vista' : '○ Marcar como vista';
+      // Update card in background if visible
+      const card = document.querySelector(`.sp-card[data-sp-id="${sp.id}"]`);
+      if (card) {
+        card.classList.toggle('seen-card', seen);
+        const cardBtn = card.querySelector('.seen-btn');
+        if (cardBtn) { cardBtn.classList.toggle('seen', seen); cardBtn.textContent = seen ? '✓' : '○'; }
+      }
+    });
+  }, 0);
+
   loadGallery(sp);
   setTimeout(() => loadMap(sp), 50);
 }
@@ -1708,7 +1842,263 @@ function clearPlaceFilter() {
   history.replaceState({ depth: 0 }, '', '');
   repaint();
 }
+// ─── FIREBASE + GOOGLE AUTH ───────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBqZEzu7mhYr9FcQnPa2NVXSyZkbig4KmA",
+  authDomain: "bioexplorer-d85f5.firebaseapp.com",
+  projectId: "bioexplorer-d85f5",
+  storageBucket: "bioexplorer-d85f5.firebasestorage.app",
+  messagingSenderId: "350606865620",
+  appId: "1:350606865620:web:3388588abb07359c533741"
+};
+
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+
+let currentUser = null;
+let seenCache   = {}; // local mirror of Firestore data
+
+// ── Auth state listener ───────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  updateAuthUI();
+  if (user) {
+    await loadSeenFromFirestore();
+  } else {
+    seenCache = {};
+    updateSeenCounter();
+  }
+});
+
+// Handle redirect result when returning from Google login
+getRedirectResult(auth).catch(e => {
+  if (e.code !== 'auth/cancelled-popup-request') {
+    console.error('Redirect login error:', e);
+    alert('Error al iniciar sesión: ' + e.message);
+  }
+});
+
+function updateAuthUI() {
+  const btn = document.getElementById('authBtn');
+  const avatar = document.getElementById('authAvatar');
+  if (!btn) return;
+  if (currentUser) {
+    btn.title = 'Cerrar sesión';
+    if (avatar) {
+      avatar.style.backgroundImage = `url(${currentUser.photoURL})`;
+      avatar.style.display = 'block';
+    }
+    btn.querySelector('.auth-label').textContent = currentUser.displayName?.split(' ')[0] || 'Yo';
+  } else {
+    if (avatar) avatar.style.display = 'none';
+    btn.querySelector('.auth-label').textContent = 'Entrar';
+  }
+}
+
+async function handleAuth() {
+  if (currentUser) {
+    if (confirm(`¿Cerrar sesión de ${currentUser.displayName}?`)) {
+      await signOut(auth);
+    }
+  } else {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithRedirect(auth, provider);
+      // Page will redirect to Google and come back automatically
+    } catch(e) {
+      alert('Error al iniciar sesión: ' + e.message);
+    }
+  }
+}
+
+// ── Firestore helpers ─────────────────────────────────────────
+function userDocRef() {
+  return doc(db, 'users', currentUser.uid);
+}
+
+async function loadSeenFromFirestore() {
+  try {
+    const snap = await getDoc(userDocRef());
+    seenCache = snap.exists() ? (snap.data().seen || {}) : {};
+  } catch(e) {
+    seenCache = {};
+  }
+  updateSeenCounter();
+  // Refresh current view if showing species
+  const grid = document.getElementById('grid');
+  if (grid) {
+    grid.querySelectorAll('.sp-card').forEach(card => {
+      const id = parseInt(card.dataset.spId);
+      if (!id) return;
+      const seen = !!seenCache[id];
+      card.classList.toggle('seen-card', seen);
+      const btn = card.querySelector('.seen-btn');
+      if (btn) { btn.classList.toggle('seen', seen); btn.textContent = seen ? '✓' : '○'; }
+    });
+  }
+}
+
+// ── Seen species API (now uses Firestore) ─────────────────────
+function isSeen(id) {
+  return !!seenCache[id];
+}
+
+async function toggleSeen(sp) {
+  if (!currentUser) {
+    showLoginPrompt();
+    return;
+  }
+  const wasSeen = !!seenCache[sp.id];
+  if (wasSeen) {
+    delete seenCache[sp.id];
+  } else {
+    seenCache[sp.id] = {
+      id: sp.id, name: sp.name, common: sp.common || '',
+      photo: sp.photo || null, inatUrl: sp.inatUrl,
+      seenAt: new Date().toISOString(),
+    };
+  }
+  updateSeenCounter();
+  // Write to Firestore
+  try {
+    if (wasSeen) {
+      await updateDoc(userDocRef(), { [`seen.${sp.id}`]: deleteField() });
+    } else {
+      await setDoc(userDocRef(), { seen: { [sp.id]: seenCache[sp.id] } }, { merge: true });
+    }
+  } catch(e) {
+    console.error('Firestore write error:', e);
+  }
+}
+
+function updateSeenCounter() {
+  const count = Object.keys(seenCache).length;
+  const el = document.getElementById('mySpeciesCount');
+  if (el) el.textContent = count;
+}
+
+function showLoginPrompt() {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px';
+  m.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:340px;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:12px">🔑</div>
+      <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;margin-bottom:8px">Inicia sesión</div>
+      <div style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">Para guardar tus especies vistas necesitas una cuenta.</div>
+      <button id="loginPromptBtn" style="width:100%;padding:12px;background:#fff;color:#333;border:none;border-radius:8px;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:500">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"> Continuar con Google
+      </button>
+      <button id="loginPromptClose" style="margin-top:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem">Cancelar</button>
+    </div>
+  `;
+  m.querySelector('#loginPromptBtn').addEventListener('click', async () => {
+    document.body.removeChild(m);
+    const provider = new GoogleAuthProvider();
+    await signInWithRedirect(auth, provider);
+  });
+  m.querySelector('#loginPromptClose').addEventListener('click', () => document.body.removeChild(m));
+  document.body.appendChild(m);
+}
+
+// ─── MY SPECIES PAGE ──────────────────────────────────────────
+function showMySpecies() {
+  if (!currentUser) { showLoginPrompt(); return; }
+  pushNav('Mis especies', () => renderMySpecies());
+}
+
+function renderMySpecies() {
+  const species = Object.values(seenCache).sort((a, b) =>
+    new Date(b.seenAt) - new Date(a.seenAt)
+  );
+
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Mi registro</div>
+        <div class="level-title">👁 Mis especies</div>
+      </div>
+    </div>
+    <div class="my-species-stats">
+      <div class="ms-stat">
+        <div class="ms-stat-val">${species.length}</div>
+        <div class="ms-stat-key">especies vistas</div>
+      </div>
+      ${species.length > 0 ? `
+      <div class="ms-stat">
+        <div class="ms-stat-val">${new Date(species[species.length-1].seenAt).toLocaleDateString('es-ES')}</div>
+        <div class="ms-stat-key">primera vista</div>
+      </div>
+      <div class="ms-stat">
+        <div class="ms-stat-val">${new Date(species[0].seenAt).toLocaleDateString('es-ES')}</div>
+        <div class="ms-stat-key">última vista</div>
+      </div>` : ''}
+    </div>
+    ${species.length === 0
+      ? `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.85rem">
+           <div style="font-size:3rem;margin-bottom:12px">🔭</div>
+           Aún no has marcado ninguna especie.<br>
+           <span style="color:var(--dim)">Usa el botón ○ en cualquier especie para registrarla.</span>
+         </div>`
+      : `<div class="species-grid" id="myGrid"></div>
+         <div style="text-align:center;margin-top:20px">
+           <button class="clear-all-btn" id="clearAllBtn">🗑 Borrar todo el registro</button>
+         </div>`
+    }
+  `;
+
+  if (species.length > 0) {
+    const grid = document.getElementById('myGrid');
+    species.forEach(sp => {
+      const card = document.createElement('div');
+      card.className = 'sp-card seen-card';
+      card.dataset.spId = sp.id;
+      const img = sp.photo
+        ? `<img class="sp-img" src="${sp.photo}" alt="${sp.name}" loading="lazy">`
+        : `<div class="sp-no-img"><span>📷</span><small>sin foto</small></div>`;
+      const date = new Date(sp.seenAt).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
+      card.innerHTML = `
+        <div class="sp-img-wrap">
+          ${img}
+          <button class="seen-btn seen" title="Desmarcar">✓</button>
+        </div>
+        <div class="sp-info">
+          <div class="sp-sci">${sp.name}</div>
+          ${sp.common ? `<div class="sp-common">${sp.common}</div>` : ''}
+          <div class="sp-obs" style="color:var(--accent2)">${date}</div>
+        </div>
+      `;
+      card.querySelector('.seen-btn').addEventListener('click', async e => {
+        e.stopPropagation();
+        await toggleSeen(sp);
+        renderMySpecies();
+      });
+      card.addEventListener('click', () => openModal(sp));
+      grid.appendChild(card);
+    });
+
+    document.getElementById('clearAllBtn').addEventListener('click', async () => {
+      if (confirm('¿Borrar todo el registro de especies vistas?')) {
+        seenCache = {};
+        updateSeenCounter();
+        try { await setDoc(userDocRef(), { seen: {} }); } catch(e) {}
+        renderMySpecies();
+      }
+    });
+  }
+}
+
 // ─── INIT ─────────────────────────────────────────────────────
+document.getElementById('authBtn').addEventListener('click', handleAuth);
+document.getElementById('mySpeciesBtn').addEventListener('click', showMySpecies);
+updateSeenCounter();
 renderHome();
 </script>
 </body>

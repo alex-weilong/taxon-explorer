@@ -1974,6 +1974,7 @@ async function toggleSeen(sp) {
     seenCache[sp.id] = {
       id: sp.id, name: sp.name, common: sp.common || '',
       photo: sp.photo || null, inatUrl: sp.inatUrl,
+      ancestor_ids: sp.ancestor_ids || [],
       seenAt: new Date().toISOString(),
     };
   }
@@ -2024,12 +2025,43 @@ function showMySpecies() {
   pushNav('Mis especies', () => renderMySpecies());
 }
 
+// Mapping from iNaturalist taxon IDs to group info
+// These are the ancestor IDs for each major class
+const TAXON_GROUPS = [
+  { id: 26036,  name: 'Reptiles',    icon: '🦎' },
+  { id: 3,      name: 'Aves',        icon: '🦅' },
+  { id: 40151,  name: 'Mamíferos',   icon: '🦁' },
+  { id: 20978,  name: 'Anfibios',    icon: '🐸' },
+  { id: 47119,  name: 'Arácnidos',   icon: '🕷️' },
+  { id: 47158,  name: 'Insectos',    icon: '🦋' },
+  { id: 47178,  name: 'Peces',       icon: '🐠' },
+  { id: 47126,  name: 'Plantas',     icon: '🌿' },
+  { id: 47170,  name: 'Hongos',      icon: '🍄' },
+  { id: 48222,  name: 'Moluscos',    icon: '🐚' },
+  { id: 47549,  name: 'Crustáceos',  icon: '🦞' },
+];
+
+function getGroupForSpecies(sp) {
+  const ancestors = sp.ancestor_ids || [];
+  for (const g of TAXON_GROUPS) {
+    if (ancestors.includes(g.id)) return g;
+  }
+  return { id: 0, name: 'Otros', icon: '🔬' };
+}
+
 function renderMySpecies() {
   const species = Object.values(seenCache).sort((a, b) =>
-    new Date(b.seenAt) - new Date(a.seenAt)
+    a.name.localeCompare(b.name)
   );
 
   const m = document.getElementById('main');
+
+  // Stats
+  const firstDate = species.length > 0
+    ? [...species].sort((a,b) => new Date(a.seenAt)-new Date(b.seenAt))[0].seenAt : null;
+  const lastDate = species.length > 0
+    ? [...species].sort((a,b) => new Date(b.seenAt)-new Date(a.seenAt))[0].seenAt : null;
+
   m.innerHTML = `
     <div class="level-header">
       <div>
@@ -2060,30 +2092,31 @@ function renderMySpecies() {
         <div class="ms-stat-val">${species.length}</div>
         <div class="ms-stat-key">especies vistas</div>
       </div>
-      ${species.length > 0 ? `
+      ${firstDate ? `
       <div class="ms-stat">
-        <div class="ms-stat-val">${new Date(species[species.length-1].seenAt).toLocaleDateString('es-ES')}</div>
+        <div class="ms-stat-val">${new Date(firstDate).toLocaleDateString('es-ES')}</div>
         <div class="ms-stat-key">primera vista</div>
       </div>
       <div class="ms-stat">
-        <div class="ms-stat-val">${new Date(species[0].seenAt).toLocaleDateString('es-ES')}</div>
+        <div class="ms-stat-val">${new Date(lastDate).toLocaleDateString('es-ES')}</div>
         <div class="ms-stat-key">última vista</div>
       </div>` : ''}
     </div>
+
     ${species.length === 0
       ? `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.85rem">
            <div style="font-size:3rem;margin-bottom:12px">🔭</div>
            Aún no has marcado ninguna especie.<br>
            <span style="color:var(--dim)">Usa el botón ○ en cualquier especie para registrarla.</span>
          </div>`
-      : `<div class="species-grid" id="myGrid"></div>
-         <div style="text-align:center;margin-top:20px">
+      : `<div id="myGroupsContainer"></div>
+         <div style="text-align:center;margin-top:28px">
            <button class="clear-all-btn" id="clearAllBtn">🗑 Borrar todo el registro</button>
          </div>`
     }
   `;
 
-  // Wire up iNaturalist import
+  // Wire iNat import
   document.getElementById('inatImportBtn').addEventListener('click', () => {
     const username = document.getElementById('inatUserInput').value.trim();
     if (!username) { alert('Introduce tu nombre de usuario de iNaturalist'); return; }
@@ -2093,9 +2126,39 @@ function renderMySpecies() {
     if (e.key === 'Enter') document.getElementById('inatImportBtn').click();
   });
 
-  if (species.length > 0) {
-    const grid = document.getElementById('myGrid');
-    species.forEach(sp => {
+  if (species.length === 0) return;
+
+  // Group species by taxonomic group
+  const groups = {};
+  species.forEach(sp => {
+    const g = getGroupForSpecies(sp);
+    if (!groups[g.name]) groups[g.name] = { ...g, species: [] };
+    groups[g.name].species.push(sp);
+  });
+
+  // Sort groups: known groups first in TAXON_GROUPS order, then "Otros"
+  const orderedGroups = [
+    ...TAXON_GROUPS.map(g => groups[g.name]).filter(Boolean),
+    ...(groups['Otros'] ? [groups['Otros']] : []),
+  ];
+
+  const container = document.getElementById('myGroupsContainer');
+  orderedGroups.forEach(group => {
+    // Group header
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;gap:10px;margin:28px 0 14px';
+    header.innerHTML = `
+      <span style="font-size:1.6rem">${group.icon}</span>
+      <span style="font-family:"Playfair Display",serif;font-style:italic;font-size:1.2rem;font-weight:700">${group.name}</span>
+      <span style="font-family:"DM Mono",monospace;font-size:0.7rem;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:99px">${group.species.length} especies</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    `;
+    container.appendChild(header);
+
+    // Species grid for this group
+    const grid = document.createElement('div');
+    grid.className = 'species-grid';
+    group.species.forEach(sp => {
       const card = document.createElement('div');
       card.className = 'sp-card seen-card';
       card.dataset.spId = sp.id;
@@ -2122,16 +2185,17 @@ function renderMySpecies() {
       card.addEventListener('click', () => openModal(sp));
       grid.appendChild(card);
     });
+    container.appendChild(grid);
+  });
 
-    document.getElementById('clearAllBtn').addEventListener('click', async () => {
-      if (confirm('¿Borrar todo el registro de especies vistas?')) {
-        seenCache = {};
-        updateSeenCounter();
-        try { await setDoc(userDocRef(), { seen: {} }); } catch(e) {}
-        renderMySpecies();
-      }
-    });
-  }
+  document.getElementById('clearAllBtn').addEventListener('click', async () => {
+    if (confirm('¿Borrar todo el registro de especies vistas?')) {
+      seenCache = {};
+      updateSeenCounter();
+      try { await setDoc(userDocRef(), { seen: {} }); } catch(e) {}
+      renderMySpecies();
+    }
+  });
 }
 
 // ─── INAT IMPORT ──────────────────────────────────────────────
@@ -2178,6 +2242,7 @@ async function importFromInat(username) {
             common: t.preferred_common_name || '',
             photo: t.default_photo?.medium_url || t.default_photo?.url || null,
             inatUrl: `https://www.inaturalist.org/taxa/${t.id}`,
+            ancestor_ids: t.ancestor_ids || [],
             seenAt: new Date().toISOString(),
             source: 'inat_import',
           };

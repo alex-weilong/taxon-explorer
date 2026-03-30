@@ -2037,6 +2037,24 @@ function renderMySpecies() {
         <div class="level-title">👁 Mis especies</div>
       </div>
     </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:1.4rem">🌿</div>
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:0.82rem;font-weight:500;margin-bottom:4px">Importar desde iNaturalist</div>
+        <div style="font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace">Introduce tu usuario y se marcarán todas tus especies observadas</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input id="inatUserInput" type="text" placeholder="tu_usuario_inat"
+          style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.8rem;outline:none;width:160px">
+        <button id="inatImportBtn"
+          style="padding:7px 14px;background:var(--accent);color:#0d1117;border:none;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:500;white-space:nowrap">
+          Importar
+        </button>
+      </div>
+      <div id="inatImportStatus" style="width:100%;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);display:none"></div>
+    </div>
+
     <div class="my-species-stats">
       <div class="ms-stat">
         <div class="ms-stat-val">${species.length}</div>
@@ -2064,6 +2082,16 @@ function renderMySpecies() {
          </div>`
     }
   `;
+
+  // Wire up iNaturalist import
+  document.getElementById('inatImportBtn').addEventListener('click', () => {
+    const username = document.getElementById('inatUserInput').value.trim();
+    if (!username) { alert('Introduce tu nombre de usuario de iNaturalist'); return; }
+    importFromInat(username);
+  });
+  document.getElementById('inatUserInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('inatImportBtn').click();
+  });
 
   if (species.length > 0) {
     const grid = document.getElementById('myGrid');
@@ -2103,6 +2131,85 @@ function renderMySpecies() {
         renderMySpecies();
       }
     });
+  }
+}
+
+// ─── INAT IMPORT ──────────────────────────────────────────────
+async function importFromInat(username) {
+  const btn    = document.getElementById('inatImportBtn');
+  const status = document.getElementById('inatImportStatus');
+  if (!btn || !status) return;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+  status.style.display = 'block';
+  status.textContent = 'Buscando usuario…';
+
+  try {
+    // Verify user exists
+    const userRes = await fetch(`${API}/users/autocomplete?q=${encodeURIComponent(username)}&per_page=5`);
+    const userData = await userRes.json();
+    const user = (userData.results || []).find(u => u.login.toLowerCase() === username.toLowerCase());
+    if (!user) throw new Error(`Usuario "${username}" no encontrado en iNaturalist`);
+
+    status.textContent = `✓ Usuario encontrado: ${user.name || user.login}. Cargando observaciones…`;
+
+    // Fetch all research-grade species observations (paginated)
+    let page = 1;
+    let imported = 0;
+    let total = null;
+    const newEntries = {};
+
+    while (true) {
+      const url = `${API}/observations/species_counts?user_login=${encodeURIComponent(user.login)}&quality_grade=research&per_page=100&page=${page}&locale=es`;
+      const res = await fetch(url);
+      if (!res.ok) break;
+      const data = await res.json();
+
+      if (total === null) total = data.total_results;
+      const results = data.results || [];
+      if (!results.length) break;
+
+      for (const r of results) {
+        const t = r.taxon;
+        if (!seenCache[t.id]) {
+          newEntries[t.id] = {
+            id: t.id, name: t.name,
+            common: t.preferred_common_name || '',
+            photo: t.default_photo?.medium_url || t.default_photo?.url || null,
+            inatUrl: `https://www.inaturalist.org/taxa/${t.id}`,
+            seenAt: new Date().toISOString(),
+            source: 'inat_import',
+          };
+          imported++;
+        }
+      }
+
+      status.textContent = `Importando… ${Object.keys(seenCache).length + imported} especies (página ${page})`;
+
+      if (results.length < 100) break;
+      page++;
+      await new Promise(res => setTimeout(res, 150)); // avoid rate limiting
+    }
+
+    if (imported === 0) {
+      status.textContent = '✓ Todo ya estaba importado, nada nuevo que añadir.';
+    } else {
+      // Merge into seenCache and save to Firestore
+      Object.assign(seenCache, newEntries);
+      await setDoc(userDocRef(), { seen: seenCache }, { merge: true });
+      updateSeenCounter();
+      status.textContent = `✓ ¡Importadas ${imported} especies nuevas de @${user.login}!`;
+      // Re-render after a moment
+      setTimeout(() => renderMySpecies(), 1500);
+    }
+
+  } catch(e) {
+    status.textContent = `✗ Error: ${e.message}`;
+    console.error('iNat import error:', e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Importar';
   }
 }
 

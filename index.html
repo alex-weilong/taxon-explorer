@@ -818,7 +818,7 @@ async function fetchSpeciesGlobal(parentId) {
 async function fetchSpeciesInPlace(parentId, placeId) {
   let all = [];
   for (let page = 1; page <= 5; page++) {
-    const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&quality_grade=research&captive=false&per_page=100&page=${page}&locale=es`;
+    const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&verifiable=true&captive=false&per_page=100&page=${page}&locale=es`;
   }
   return all.map(r => ({
     id: r.taxon.id, name: r.taxon.name,
@@ -837,7 +837,7 @@ async function fetchSpeciesInPlace(parentId, placeId) {
 async function fetchChildrenInPlace(parentId, rank, placeId) {
   let allResults = [];
   for (let page = 1; page <= 5; page++) {
-    const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&quality_grade=research&captive=false&per_page=100&page=${page}&locale=es`;
+    const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&verifiable=true&captive=false&per_page=100&page=${page}&locale=es`;
   }
   if (!allResults.length) return [];
 
@@ -881,7 +881,7 @@ async function cachedSpecies(parentId) {
 async function fetchPlaceCount(taxonId) {
   const key = `pc_${taxonId}_${activePlaceId}`;
   if (!cache[key]) cache[key] = fetch(
-    `${API}/observations/species_counts?taxon_id=${taxonId}&place_id=${activePlaceId}&quality_grade=research&captive=false&per_page=1`
+    `${API}/observations/species_counts?taxon_id=${taxonId}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=1`
   ).then(r => r.ok ? r.json() : null).then(d => d?.total_results ?? 0).catch(() => 0);
   return cache[key];
 }

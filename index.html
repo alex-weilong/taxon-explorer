@@ -1867,6 +1867,7 @@ let seenCache   = {}; // local mirror of Firestore data
 
 // ── Auth state listener ───────────────────────────────────────
 onAuthStateChanged(auth, async user => {
+  console.log('Auth state changed:', user ? user.email : 'null');
   currentUser = user;
   updateAuthUI();
   if (user) {
@@ -1878,12 +1879,30 @@ onAuthStateChanged(auth, async user => {
 });
 
 // Handle redirect result when returning from Google login
-getRedirectResult(auth).catch(e => {
-  if (e.code !== 'auth/cancelled-popup-request') {
-    console.error('Redirect login error:', e);
-    alert('Error al iniciar sesión: ' + e.message);
+getRedirectResult(auth).then(result => {
+  if (result?.user) {
+    console.log('Redirect login success:', result.user.email);
+  }
+}).catch(e => {
+  console.error('Redirect result error:', e.code, e.message);
+  if (e.code && e.code !== 'auth/cancelled-popup-request') {
+    showAuthError(e);
   }
 });
+
+function showAuthError(e) {
+  const msg = {
+    'auth/unauthorized-domain': `Dominio no autorizado. Ve a Firebase Console → Authentication → Settings → Dominios autorizados y añade: <b>alex-weilong.github.io</b>`,
+    'auth/popup-blocked': 'El navegador bloqueó el popup. Permite popups para esta página.',
+    'auth/network-request-failed': 'Error de red. Comprueba tu conexión.',
+  }[e.code] || `Error: ${e.message}`;
+
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent3);border-radius:10px;padding:14px 20px;z-index:3000;max-width:340px;font-size:0.82rem;font-family:DM Sans,sans-serif;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,0.5)';
+  div.innerHTML = `<b style="color:var(--accent3)">Error de autenticación</b><br><span style="color:var(--muted)">${msg}</span><br><small style="color:var(--dim);font-family:DM Mono,monospace">${e.code}</small>`;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 8000);
+}
 
 function updateAuthUI() {
   const btn = document.getElementById('authBtn');

@@ -6,6 +6,7 @@
 <title>BioExplorer</title>
 <meta name="description" content="Explorador taxonómico de biodiversidad">
 <meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BioExplorer">
@@ -1844,7 +1845,7 @@ function clearPlaceFilter() {
 }
 // ─── FIREBASE + GOOGLE AUTH ───────────────────────────────────
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1875,18 +1876,6 @@ onAuthStateChanged(auth, async user => {
   } else {
     seenCache = {};
     updateSeenCounter();
-  }
-});
-
-// Handle redirect result when returning from Google login
-getRedirectResult(auth).then(result => {
-  if (result?.user) {
-    console.log('Redirect login success:', result.user.email);
-  }
-}).catch(e => {
-  console.error('Redirect result error:', e.code, e.message);
-  if (e.code && e.code !== 'auth/cancelled-popup-request') {
-    showAuthError(e);
   }
 });
 
@@ -1929,10 +1918,14 @@ async function handleAuth() {
   } else {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
-      // Page will redirect to Google and come back automatically
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider);
+      console.log('Login OK:', result.user.email);
     } catch(e) {
-      alert('Error al iniciar sesión: ' + e.message);
+      console.error('Login error:', e.code, e.message);
+      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
+        showAuthError(e);
+      }
     }
   }
 }
@@ -2019,8 +2012,7 @@ function showLoginPrompt() {
   `;
   m.querySelector('#loginPromptBtn').addEventListener('click', async () => {
     document.body.removeChild(m);
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
+    await handleAuth();
   });
   m.querySelector('#loginPromptClose').addEventListener('click', () => document.body.removeChild(m));
   document.body.appendChild(m);

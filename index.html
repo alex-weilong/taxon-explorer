@@ -819,6 +819,11 @@ async function fetchSpeciesInPlace(parentId, placeId) {
   let all = [];
   for (let page = 1; page <= 5; page++) {
     const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&verifiable=true&captive=false&per_page=100&page=${page}&locale=es`;
+    const r = await fetch(url);
+    if (!r.ok) break;
+    const data = await r.json();
+    all = all.concat(data.results || []);
+    if ((data.results || []).length < 100) break;
   }
   return all.map(r => ({
     id: r.taxon.id, name: r.taxon.name,
@@ -838,6 +843,11 @@ async function fetchChildrenInPlace(parentId, rank, placeId) {
   let allResults = [];
   for (let page = 1; page <= 5; page++) {
     const url = `${API}/observations/species_counts?taxon_id=${parentId}&place_id=${placeId}&verifiable=true&captive=false&per_page=100&page=${page}&locale=es`;
+    const r = await fetch(url);
+    if (!r.ok) break;
+    const data = await r.json();
+    allResults = allResults.concat(data.results || []);
+    if ((data.results || []).length < 100) break;
   }
   if (!allResults.length) return [];
 

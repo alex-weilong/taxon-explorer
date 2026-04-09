@@ -648,7 +648,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
       <span class="auth-google-icon">G</span>
       <span class="auth-label">Entrar</span>
     </button>
-    <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--dim);flex-shrink:0">by @alex_weilong</span>
+    <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--dim);flex-shrink:0">by @alex_weilong · @berto_wild92 · @aburguillos.wildlife</span>
   </div>
 </header>
 
@@ -1901,7 +1901,7 @@ function showInatLoginPrompt() {
   setTimeout(() => input.focus(), 50);
 }
 
-// Descarga todas las species_counts research-grade del usuario
+// Descarga todas las species_counts research-grade del usuario sin límite
 async function syncInatUser(login, statusEl) {
   const userRes = await fetch(`${API}/users/autocomplete?q=${encodeURIComponent(login)}&per_page=5`);
   if (!userRes.ok) throw new Error('Error al contactar iNaturalist');
@@ -1912,15 +1912,24 @@ async function syncInatUser(login, statusEl) {
   if (statusEl) statusEl.textContent = `✓ @${user.login} encontrado. Descargando observaciones…`;
   currentUser = { login: user.login, name: user.name || user.login, icon: user.icon || null };
 
+  // iNat species_counts: máximo real 200 por página
+  const PER_PAGE = 200;
   const newSeen = {};
   let page = 1;
+  let total = null;
+
   while (true) {
-    const url = `${API}/observations/species_counts?user_login=${encodeURIComponent(user.login)}&quality_grade=research&per_page=500&page=${page}&locale=es`;
+    const url = `${API}/observations/species_counts?user_login=${encodeURIComponent(user.login)}&per_page=${PER_PAGE}&page=${page}&locale=es`;
     const res = await fetch(url);
     if (!res.ok) break;
     const data = await res.json();
+
+    // Guardamos el total real en la primera página
+    if (total === null) total = data.total_results || 0;
+
     const results = data.results || [];
     if (!results.length) break;
+
     results.forEach(r => {
       const t = r.taxon;
       newSeen[t.id] = {
@@ -1932,10 +1941,16 @@ async function syncInatUser(login, statusEl) {
         count: r.count,
       };
     });
-    if (statusEl) statusEl.textContent = `Cargando… ${Object.keys(newSeen).length} especies (pág. ${page})`;
-    if (results.length < 500) break;
+
+    const loaded = Object.keys(newSeen).length;
+    if (statusEl) statusEl.textContent = `Cargando… ${loaded}${total ? ' / ' + total : ''} especies (pág. ${page})`;
+
+    // Parar si ya tenemos todo o si la página vino incompleta
+    if (total !== null && loaded >= total) break;
+    if (results.length < PER_PAGE) break;
+
     page++;
-    await new Promise(r => setTimeout(r, 120));
+    await new Promise(r => setTimeout(r, 100));
   }
 
   seenCache = newSeen;

@@ -139,13 +139,29 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 .sp-common { font-size: 0.72rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-obs { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--dim); margin-top: 6px; }
 
-/* GROUP HOME */
-.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; animation: fadeUp 0.3s ease both; }
-.group-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px 22px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 10px; }
-.group-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,0.4); }
-.group-icon { font-size: 2.2rem; }
-.group-name { font-size: 1rem; font-weight: 500; }
-.group-hint { font-size: 0.7rem; color: var(--dim); font-family: 'DM Mono', monospace; }
+/* HOME: KINGDOM GRID */
+.kingdom-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px; animation: fadeUp 0.3s ease both;
+}
+.kingdom-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; cursor: pointer;
+  transition: all 0.2s; overflow: hidden; position: relative;
+  display: flex; flex-direction: column;
+}
+.kingdom-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,0.5); }
+.kingdom-img-wrap { width: 100%; aspect-ratio: 16/7; overflow: hidden; background: var(--surface2); position: relative; }
+.kingdom-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.kingdom-card:hover .kingdom-img { transform: scale(1.07); }
+.kingdom-no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; }
+.kingdom-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 6px; }
+.kingdom-badge { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.kingdom-name { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.35rem; font-weight: 700; }
+.kingdom-common { font-size: 0.78rem; color: var(--muted); }
+.kingdom-hint { font-size: 0.68rem; color: var(--dim); font-family: 'DM Mono', monospace; margin-top: 4px; }
+.kingdom-arrow { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.55); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; backdrop-filter: blur(4px); transition: all 0.2s; }
+.kingdom-card:hover .kingdom-arrow { background: var(--accent); color: #0d1117; }
 
 /* LOADING */
 .loading { text-align: center; padding: 100px 20px; }
@@ -243,16 +259,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 }
 .active-place button:hover { opacity: 1; }
 
-/* MAIN offset when filter bar visible */
-.has-filter main { padding-top: 28px; }
-
-@media (max-width: 768px) {
-  .filter-bar { padding: 0 16px; top: 54px; }
-  .filter-inner { height: 42px; gap: 8px; }
-  .filter-label { display: none; }
-  .place-wrap { max-width: 100%; }
-}
-
 /* SEARCH */
 .search-wrap {
   position: relative; flex: 1; max-width: 340px;
@@ -344,8 +350,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto; transform: scale(0.96); transition: transform 0.2s; position: relative; }
 .modal-overlay.open .modal { transform: scale(1); }
 .modal-handle { display: none; width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
-.modal-photo { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px 16px 0 0; display: block; }
-.modal-no-photo { width: 100%; aspect-ratio: 16/9; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 4rem; border-radius: 16px 16px 0 0; }
 
 /* GALLERY */
 .gallery-wrap { position: relative; background: #000; border-radius: 16px 16px 0 0; overflow: hidden; }
@@ -395,6 +399,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
   justify-content: center; background: var(--surface2);
   border-radius: 16px 16px 0 0;
 }
+
 /* AUTH BUTTON */
 .auth-btn {
   display: flex; align-items: center; gap: 7px;
@@ -449,10 +454,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 .my-species-count { font-size: 0.85rem; font-weight: 700; }
 
 /* My species page */
-.my-species-header {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 12px; margin-bottom: 28px;
-}
 .my-species-stats {
   display: flex; gap: 20px; flex-wrap: wrap;
   background: var(--surface); border: 1px solid var(--border);
@@ -530,7 +531,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
   font-family: 'DM Mono', monospace; font-size: 0.62rem;
   color: var(--dim); margin-top: 6px; text-align: right;
 }
-/* Override Leaflet popup styles */
 .leaflet-popup-content-wrapper {
   background: var(--surface) !important; border: 1px solid var(--border) !important;
   border-radius: 8px !important; color: var(--text) !important;
@@ -547,108 +547,59 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  /* Header */
   header { padding: 0 12px; }
   .header-inner { height: 54px; gap: 8px; }
   .logo { font-size: 1rem; }
   .src-badge { display: none; }
-
-  /* Search: full width dropdown, readable text */
   .search-wrap { max-width: 180px; }
   .search-input { font-size: 0.85rem; padding: 7px 28px 7px 32px; }
   .search-dropdown {
-    position: fixed;
-    top: 54px;
-    left: 0; right: 0;
-    border-radius: 0 0 12px 12px;
-    max-height: 60vh;
-    overflow-y: auto;
-    z-index: 500;
+    position: fixed; top: 54px; left: 0; right: 0;
+    border-radius: 0 0 12px 12px; max-height: 60vh; overflow-y: auto; z-index: 500;
   }
   .search-result { padding: 12px 16px; gap: 14px; }
   .sr-photo, .sr-no-photo { width: 48px; height: 48px; border-radius: 8px; }
   .sr-name { font-size: 1rem; }
   .sr-common { font-size: 0.8rem; }
-  .sr-rank { font-size: 0.68rem; }
-
-  /* Breadcrumb */
   .breadcrumb { font-size: 0.72rem; gap: 2px; }
   .crumb { padding: 2px 5px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
-
-  /* Main */
   main { padding: 20px 16px 80px; }
-
-  /* Level header */
   .level-header { margin-bottom: 20px; gap: 8px; }
   .level-title { font-size: 1.6rem; }
   .level-sub { font-size: 0.75rem; width: 100%; margin-left: 0; }
-
-  /* Taxon cards: 2 columns, more compact */
   .card-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .taxon-card { border-radius: 10px; }
   .tc-body { padding: 10px 12px 12px; }
   .tc-name { font-size: 0.92rem; }
   .tc-common { font-size: 0.68rem; }
-  .tc-pill { font-size: 0.58rem; padding: 2px 6px; }
-  .tc-arrow { width: 22px; height: 22px; font-size: 0.8rem; top: 8px; right: 8px; }
-
-  /* Group home: 2 columns */
-  .group-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .group-card { padding: 20px 14px; border-radius: 12px; }
-  .group-icon { font-size: 1.8rem; }
-  .group-name { font-size: 0.9rem; }
-
-  /* Species: 2 columns */
+  .kingdom-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kingdom-body { padding: 12px 14px 14px; }
+  .kingdom-name { font-size: 1.1rem; }
   .species-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .sp-info { padding: 8px 10px; }
-  .sp-sci { font-size: 0.78rem; }
-  .sp-common { font-size: 0.68rem; }
-
-  /* Modal: full screen on mobile */
   .modal-overlay { padding: 0; align-items: flex-end; }
-  .modal {
-    max-width: 100%;
-    max-height: 92vh;
-    border-radius: 20px 20px 0 0;
-    border-bottom: none;
-    transform: translateY(20px);
-  }
+  .modal { max-width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; border-bottom: none; transform: translateY(20px); }
   .modal-overlay.open .modal { transform: translateY(0); }
   .modal-handle { display: block; }
   .modal-body { padding: 20px 16px 32px; }
   .modal-sci { font-size: 1.4rem; }
   .modal-close { top: 12px; right: 12px; }
-
-  /* Map smaller on mobile */
   #speciesMap, .map-loading { height: 220px; }
-
-  /* Place dropdown: full width, map visible */
   .filter-bar { padding: 0 12px; top: 54px; }
   .filter-inner { height: 44px; gap: 8px; }
   .filter-label { display: none; }
   .place-wrap { max-width: 100%; overflow: visible; }
-  .place-dropdown {
-    position: fixed;
-    left: 0; right: 0;
-    top: 98px; /* header + filter bar */
-    border-radius: 0 0 12px 12px;
-    max-height: 75vh;
-    overflow-y: auto;
-    z-index: 300;
-  }
+  .place-dropdown { position: fixed; left: 0; right: 0; top: 98px; border-radius: 0 0 12px 12px; max-height: 75vh; overflow-y: auto; z-index: 300; }
   .place-result { padding: 12px 16px; font-size: 0.9rem; }
-  .pr-name { font-size: 0.9rem; }
   .place-preview { height: 220px; }
   #placePreviewMap { height: 220px; }
-
-  /* Loading */
   .loading { padding: 60px 20px; }
 }
 
 @media (max-width: 380px) {
   .card-grid { grid-template-columns: 1fr; }
   .species-grid { grid-template-columns: 1fr 1fr; }
-  .group-grid { grid-template-columns: 1fr 1fr; }
+  .kingdom-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
 </head>
@@ -656,7 +607,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 <header>
   <div class="header-inner">
-    <div class="logo">Bio<em>Explorer</em></div>
+    <div class="logo" style="cursor:pointer" id="logoBtn">Bio<em>Explorer</em></div>
     <nav class="breadcrumb" id="breadcrumb"></nav>
     <div class="search-wrap" id="searchWrap">
       <span class="search-icon">🔍</span>
@@ -684,12 +635,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
       <span class="place-icon">🌍</span>
       <input class="place-input" id="placeInput" type="text" placeholder="Filtrar por país o región…" autocomplete="off" spellcheck="false">
       <button class="place-clear" id="placeClear">✕</button>
-      <div class="place-dropdown" id="placeDropdown">
-        <div class="place-preview" id="placePreview">
-          <div id="placePreviewMap"></div>
-          <div class="place-preview-label" id="placePreviewLabel"></div>
-        </div>
-      </div>
+      <div class="place-dropdown" id="placeDropdown"></div>
     </div>
     <div class="active-place" id="activePlace">
       <span id="activePlaceName"></span>
@@ -712,26 +658,66 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script type="module">
 // ─── CONFIG ────────────────────────────────────────────────────
-const GROUPS = [
-  { id: 'reptilia',       name: 'Reptiles',   icon: '🦎', taxonId: 26036  },
-  { id: 'aves',           name: 'Aves',        icon: '🦅', taxonId: 3      },
-  { id: 'mammalia',       name: 'Mamíferos',   icon: '🦁', taxonId: 40151  },
-  { id: 'amphibia',       name: 'Anfibios',    icon: '🐸', taxonId: 20978  },
-  { id: 'arachnida',      name: 'Arácnidos',   icon: '🕷️', taxonId: 47119  },
-  { id: 'insecta',        name: 'Insectos',    icon: '🦋', taxonId: 47158  },
-  { id: 'actinopterygii', name: 'Peces',       icon: '🐠', taxonId: 47178  },
-  { id: 'plantae',        name: 'Plantas',     icon: '🌿', taxonId: 47126  },
+
+// Kingdoms shown on the home screen
+const KINGDOMS = [
+  {
+    id: 'animalia', name: 'Animalia', common: 'Reino Animal', icon: '🐾',
+    taxonId: 1, hint: 'explorar filos →',
+    photo: 'https://inaturalist-open-data.s3.amazonaws.com/photos/225047126/medium.jpg'
+  },
+  {
+    id: 'plantae', name: 'Plantae', common: 'Reino Vegetal', icon: '🌿',
+    taxonId: 47126, hint: 'explorar filos →',
+    photo: 'https://inaturalist-open-data.s3.amazonaws.com/photos/274532432/medium.jpg'
+  },
+  {
+    id: 'fungi', name: 'Fungi', common: 'Reino Fungi', icon: '🍄',
+    taxonId: 47170, hint: 'explorar filos →',
+    photo: 'https://inaturalist-open-data.s3.amazonaws.com/photos/209900567/medium.jpg'
+  },
+  {
+    id: 'chromista', name: 'Chromista', common: 'Algas y similares', icon: '🌊',
+    taxonId: 48222, hint: 'explorar filos →',
+    photo: null
+  },
+  {
+    id: 'protozoa', name: 'Protozoa', common: 'Protozoos', icon: '🔬',
+    taxonId: 47686, hint: 'explorar filos →',
+    photo: null
+  },
 ];
 
-// iNaturalist rank IDs (used as next_rank lookup)
-const RANK_SEQUENCE = ['order', 'family', 'genus', 'species'];
+// iNaturalist rank sequence for breadcrumb labels
+const RANK_ES = {
+  kingdom: 'Reino', phylum: 'Filo', class: 'Clase', order: 'Orden',
+  family: 'Familia', genus: 'Género', species: 'Especie', subspecies: 'Subespecie',
+  stateofmatter: 'Estado', subkingdom: 'Subreino', infrakingdom: 'Infrareino',
+  superphylum: 'Superfilo', subphylum: 'Subfilo', superclass: 'Superclase',
+  subclass: 'Subclase', superorder: 'Superorden', suborder: 'Suborden',
+  superfamily: 'Superfamilia', subfamily: 'Subfamilia', tribe: 'Tribu',
+  subgenus: 'Subgénero',
+};
+const RANK_ICONS = {
+  kingdom: '🌍', phylum: '🔬', class: '📦', order: '📋',
+  family: '🏠', genus: '🔤', species: '🌿', subspecies: '🔬',
+};
+
+// Map from rank to what rank comes next when drilling down
+const NEXT_RANK = {
+  kingdom: 'phylum',
+  phylum: 'class',
+  class: 'order',
+  order: 'family',
+  family: 'genus',
+  genus: 'species',
+};
 
 // ─── NAV STATE ─────────────────────────────────────────────────
-const navStack = []; // { label, renderFn }
+const navStack = [];
 
 function pushNav(label, renderFn) {
   navStack.push({ label, renderFn });
-  // Push a new browser history entry so the back button works
   history.pushState({ depth: navStack.length }, '', '');
   repaint();
 }
@@ -764,23 +750,15 @@ function renderBreadcrumb() {
   });
 }
 
-// Intercept the browser back/forward buttons
 window.addEventListener('popstate', () => {
-  // If modal is open, close it first
   if (document.getElementById('modalOverlay').classList.contains('open')) {
     closeModal();
-    // Push state again so next back goes to previous nav level
     history.pushState({ depth: navStack.length }, '', '');
     return;
   }
-  // Otherwise go back one nav level
-  if (navStack.length > 0) {
-    navStack.pop();
-    repaint();
-  }
+  if (navStack.length > 0) { navStack.pop(); repaint(); }
 });
 
-// On first load, set an initial history entry
 history.replaceState({ depth: 0 }, '', '');
 
 // ─── iNATURALIST API ──────────────────────────────────────────
@@ -789,32 +767,50 @@ const API = 'https://api.inaturalist.org/v1';
 let activePlaceId = null;
 let activePlaceName = '';
 
-// Single cache — cleared completely when place changes
 const cache = {};
 function clearCache() { Object.keys(cache).forEach(k => delete cache[k]); }
 
-// ── Global: children by rank ──────────────────────────────────
+// Fetch children at a given rank (global) — pagina hasta obtener todos
 async function fetchChildren(parentId, rank) {
-  const url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=50&order_by=observations_count&locale=es`;
-  const r = await fetch(url);
-  return (await r.json()).results || [];
+  let all = [];
+  let page = 1;
+  while (true) {
+    const url = `${API}/taxa?taxon_id=${parentId}&rank=${rank}&per_page=500&page=${page}&order_by=observations_count&locale=es`;
+    const r = await fetch(url);
+    if (!r.ok) break;
+    const data = await r.json();
+    const results = data.results || [];
+    all = all.concat(results);
+    // Si hay menos resultados que el máximo, hemos llegado al final
+    if (results.length < 500) break;
+    // Protección: no más de 10 páginas (5000 taxones)
+    if (page >= 10) break;
+    page++;
+    await new Promise(res => setTimeout(res, 80));
+  }
+  return all;
 }
 
-// ── Global: species list ──────────────────────────────────────
+// Fetch species list (global)
 async function fetchSpeciesGlobal(parentId) {
   const url = `${API}/taxa?taxon_id=${parentId}&rank=species&per_page=100&order_by=observations_count&locale=es`;
   const r = await fetch(url);
-  return ((await r.json()).results || []).map(sp => ({
+  return ((await r.json()).results || []).map(spToObj);
+}
+
+function spToObj(sp) {
+  return {
     id: sp.id, name: sp.name,
     common: sp.preferred_common_name || '',
     photo: sp.default_photo?.medium_url || sp.default_photo?.url || null,
     observations: sp.observations_count || 0,
     inatUrl: `https://www.inaturalist.org/taxa/${sp.id}`,
     wikipedia: sp.wikipedia_url || null,
-  }));
+    ancestor_ids: sp.ancestor_ids || [],
+  };
 }
 
-// ── Place: species observed in place ─────────────────────────
+// Fetch species observed in a place
 async function fetchSpeciesInPlace(parentId, placeId) {
   let all = [];
   for (let page = 1; page <= 5; page++) {
@@ -836,9 +832,7 @@ async function fetchSpeciesInPlace(parentId, placeId) {
   }));
 }
 
-// ── Place: children at a given rank ──────────────────────────
-// Gets all species in place → extracts ancestor_ids → batch-resolves
-// them to find which ancestors match the requested rank.
+// Children at rank in a place (via species_counts + ancestor batch resolve)
 async function fetchChildrenInPlace(parentId, rank, placeId) {
   let allResults = [];
   for (let page = 1; page <= 5; page++) {
@@ -851,11 +845,9 @@ async function fetchChildrenInPlace(parentId, rank, placeId) {
   }
   if (!allResults.length) return [];
 
-  // All ancestor IDs seen across all species
   const allAncIds = new Set();
   allResults.forEach(r => (r.taxon.ancestor_ids || []).forEach(id => allAncIds.add(id)));
 
-  // Batch-fetch those ancestors to find which are at the requested rank
   const ids = [...allAncIds];
   const found = {};
   for (let i = 0; i < ids.length; i += 100) {
@@ -866,11 +858,9 @@ async function fetchChildrenInPlace(parentId, rank, placeId) {
     } catch(e) {}
     if (i + 100 < ids.length) await new Promise(res => setTimeout(res, 100));
   }
-
   return Object.values(found).filter(t => allAncIds.has(t.id));
 }
 
-// ── Cached accessors ─────────────────────────────────────────
 async function cachedChildren(parentId, rank) {
   const key = `ch_${parentId}_${rank}_${activePlaceId||'g'}`;
   if (!cache[key]) cache[key] = activePlaceId
@@ -887,7 +877,6 @@ async function cachedSpecies(parentId) {
   return cache[key];
 }
 
-// ── Place count for pill badges ───────────────────────────────
 async function fetchPlaceCount(taxonId) {
   const key = `pc_${taxonId}_${activePlaceId}`;
   if (!cache[key]) cache[key] = fetch(
@@ -896,17 +885,81 @@ async function fetchPlaceCount(taxonId) {
   return cache[key];
 }
 
-// ─── HOME ──────────────────────────────────────────────────────
+// ─── HOME: KINGDOMS ────────────────────────────────────────────
+function renderHome() {
+  const m = document.getElementById('main');
+  m.innerHTML = `
+    <div class="level-header">
+      <div>
+        <div class="level-rank">Clasificación</div>
+        <div class="level-title">Reinos de la vida</div>
+      </div>
+      <div class="level-sub">Reino → Filo → Clase → Orden → Familia → Género → Especie</div>
+    </div>
+    <div class="kingdom-grid" id="kingdomGrid"></div>
+  `;
+  KINGDOMS.forEach(k => {
+    const card = document.createElement('div');
+    card.className = 'kingdom-card';
+    const imgHtml = k.photo
+      ? `<img class="kingdom-img" src="${k.photo}" alt="${k.name}" loading="lazy"
+           onerror="this.parentElement.innerHTML='<div class=\\'kingdom-no-img\\'>${k.icon}</div>'">`
+      : `<div class="kingdom-no-img">${k.icon}</div>`;
+    card.innerHTML = `
+      <div class="kingdom-img-wrap">${imgHtml}</div>
+      <span class="kingdom-arrow">→</span>
+      <div class="kingdom-body">
+        <div class="kingdom-badge">Reino</div>
+        <div class="kingdom-name">${k.name}</div>
+        <div class="kingdom-common">${k.common}</div>
+        <div class="kingdom-hint">${k.hint}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => enterTaxon(k.taxonId, k.name, 'kingdom'));
+    document.getElementById('kingdomGrid').appendChild(card);
+  });
+}
 
-// Cache for species counts per taxon+place
-// Renders a grid of taxon cards, updating pills with place counts asynchronously
-async function renderCardGrid(items, rankLabel, clickFn, getPhotoFn) {
+// ─── GENERIC DRILL-DOWN ────────────────────────────────────────
+// Handles any rank: kingdom → phylum → class → order → family → genus → species
+async function enterTaxon(taxonId, taxonName, currentRank) {
+  const nextRank = NEXT_RANK[currentRank];
+  if (!nextRank) return; // already at species level, open modal
+
+  const nextRankEs = RANK_ES[nextRank] || nextRank;
+  const currentRankEs = RANK_ES[currentRank] || currentRank;
+
+  showLoading(`Cargando ${nextRankEs}s de <em>${taxonName}</em>…`
+    + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
+
+  try {
+    if (nextRank === 'species') {
+      // Go directly to species level
+      const species = await cachedSpecies(taxonId);
+      if (!species.length) throw new Error(`No se encontraron especies${activePlaceId ? ' en esta zona.' : '.'}`);
+      pushNav(taxonName, () => showSpecies({ id: taxonId, name: taxonName, rank: currentRank }, species));
+    } else {
+      const children = await cachedChildren(taxonId, nextRank);
+      if (!children.length) throw new Error(`No se encontraron ${nextRankEs}s${activePlaceId ? ' en esta zona.' : '.'}`);
+      pushNav(taxonName, () => showChildrenLevel(
+        { id: taxonId, name: taxonName, rank: currentRank },
+        children, nextRank
+      ));
+    }
+  } catch(e) {
+    showError('Error al cargar', e.message, () => enterTaxon(taxonId, taxonName, currentRank));
+  }
+}
+
+// ─── SHOW CHILDREN AT A GIVEN RANK ────────────────────────────
+async function renderCardGrid(items, rankLabel, clickFn) {
   const grid = document.getElementById('grid');
   items.forEach(item => {
     const globalCount = item.complete_species_count;
-    const pillText = activePlaceId ? '…' : (globalCount ? `${globalCount.toLocaleString()} especies` : '—');
+    const pillText = activePlaceId ? '…' : (globalCount ? `${globalCount.toLocaleString()} spp.` : '—');
+    const photo = item.default_photo?.medium_url || item.default_photo?.url || null;
     const card = makeCard(rankLabel, item.name, item.preferred_common_name || '',
-      [pillText], getPhotoFn(item));
+      [pillText], photo);
     card.addEventListener('click', () => clickFn(item));
     grid.appendChild(card);
   });
@@ -915,143 +968,43 @@ async function renderCardGrid(items, rankLabel, clickFn, getPhotoFn) {
     await Promise.all(items.map(async (item, i) => {
       const count = await fetchPlaceCount(item.id);
       const pill = cards[i]?.querySelector('.tc-pill');
-      if (pill) { pill.textContent = `${count.toLocaleString()} especies`; pill.style.color = 'var(--accent2)'; }
+      if (pill) { pill.textContent = `${count.toLocaleString()} spp.`; pill.style.color = 'var(--accent2)'; }
     }));
   }
 }
 
-function renderHome() {
+function showChildrenLevel(parent, children, childRank) {
+  const parentRankEs = RANK_ES[parent.rank] || parent.rank;
+  const childRankEs  = RANK_ES[childRank] || childRank;
+  const sorted = [...children].sort((a, b) => a.name.localeCompare(b.name));
+
   const m = document.getElementById('main');
   m.innerHTML = `
     <div class="level-header">
       <div>
-        <div class="level-rank">Explorador</div>
-        <div class="level-title">Grupos taxonómicos</div>
+        <div class="level-rank">${parentRankEs}</div>
+        <div class="level-title">${parent.name}</div>
       </div>
+      <div class="level-sub">${sorted.length} ${childRankEs}s</div>
     </div>
-    <div class="group-grid" id="groupGrid"></div>
+    <div class="card-grid" id="grid"></div>
   `;
-  GROUPS.forEach(g => {
-    const card = document.createElement('div');
-    card.className = 'group-card';
-    card.innerHTML = `
-      <div class="group-icon">${g.icon}</div>
-      <div class="group-name">${g.name}</div>
-      <div class="group-hint">explorar órdenes →</div>
-    `;
-    card.addEventListener('click', () => enterGroup(g));
-    document.getElementById('groupGrid').appendChild(card);
+
+  renderCardGrid(sorted, childRankEs, child => {
+    enterTaxon(child.id, child.name, childRank);
   });
 }
 
-// ─── ENTER GROUP → fetch orders ────────────────────────────────
-async function enterGroup(group) {
-  showLoading(`Cargando órdenes de ${group.name}…`);
-  try {
-    const orders = await cachedChildren(group.taxonId, 'order');
-    if (!orders.length) throw new Error('No se encontraron órdenes. Intenta con otro grupo.');
-    pushNav(group.name, () => showOrders(group, orders));
-  } catch(e) {
-    showError('Error al cargar', e.message, () => enterGroup(group));
-  }
-}
-
-// ─── LEVEL: ORDERS ────────────────────────────────────────────
-function showOrders(group, orders) {
-  const sorted = [...orders].sort((a, b) => a.name.localeCompare(b.name));
-  const m = document.getElementById('main');
-  m.innerHTML = `
-    <div class="level-header">
-      <div>
-        <div class="level-rank">Clase</div>
-        <div class="level-title">${group.icon} ${group.name}</div>
-      </div>
-      <div class="level-sub">${sorted.length} órdenes</div>
-    </div>
-    <div class="card-grid" id="grid"></div>
-  `;
-  renderCardGrid(sorted, 'Orden', enterOrder,
-    item => item.default_photo?.medium_url || item.default_photo?.url || null);
-}
-
-async function enterOrder(order) {
-  showLoading(`Cargando familias de ${order.name}…` + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
-  try {
-    const families = await cachedChildren(order.id, 'family');
-    if (!families.length) throw new Error('No se encontraron familias' + (activePlaceId ? ' en esta zona.' : '.'));
-    pushNav(order.name, () => showFamilies(order, families));
-  } catch(e) {
-    showError('Error al cargar', e.message, () => enterOrder(order));
-  }
-}
-
-// ─── LEVEL: FAMILIES ──────────────────────────────────────────
-function showFamilies(order, families) {
-  const sorted = [...families].sort((a, b) => a.name.localeCompare(b.name));
-  const m = document.getElementById('main');
-  m.innerHTML = `
-    <div class="level-header">
-      <div>
-        <div class="level-rank">Orden</div>
-        <div class="level-title">${order.name}</div>
-      </div>
-      <div class="level-sub">${sorted.length} familias</div>
-    </div>
-    <div class="card-grid" id="grid"></div>
-  `;
-  renderCardGrid(sorted, 'Familia', enterFamily,
-    item => item.default_photo?.medium_url || item.default_photo?.url || null);
-}
-
-async function enterFamily(fam) {
-  showLoading(`Cargando géneros de ${fam.name}…` + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
-  try {
-    const genera = await cachedChildren(fam.id, 'genus');
-    if (!genera.length) throw new Error('No se encontraron géneros' + (activePlaceId ? ' en esta zona.' : '.'));
-    pushNav(fam.name, () => showGenera(fam, genera));
-  } catch(e) {
-    showError('Error al cargar', e.message, () => enterFamily(fam));
-  }
-}
-
-// ─── LEVEL: GENERA ────────────────────────────────────────────
-function showGenera(fam, genera) {
-  const sorted = [...genera].sort((a, b) => a.name.localeCompare(b.name));
-  const m = document.getElementById('main');
-  m.innerHTML = `
-    <div class="level-header">
-      <div>
-        <div class="level-rank">Familia</div>
-        <div class="level-title">${fam.name}</div>
-      </div>
-      <div class="level-sub">${sorted.length} géneros</div>
-    </div>
-    <div class="card-grid" id="grid"></div>
-  `;
-  renderCardGrid(sorted, 'Género', enterGenus,
-    item => item.default_photo?.medium_url || item.default_photo?.url || null);
-}
-
-async function enterGenus(genus) {
-  showLoading(`Cargando especies de ${genus.name}…` + (activePlaceId ? '<br><small style="color:var(--dim)">Filtrando por zona…</small>' : ''));
-  try {
-    const species = await cachedSpecies(genus.id);
-    if (!species.length) throw new Error('No se encontraron especies' + (activePlaceId ? ' en esta zona.' : '.'));
-    pushNav(genus.name, () => showSpecies(genus, species));
-  } catch(e) {
-    showError('Error al cargar', e.message, () => enterGenus(genus));
-  }
-}
-
-// ─── LEVEL: SPECIES ───────────────────────────────────────────
-function showSpecies(genus, species) {
+// ─── SPECIES LEVEL ────────────────────────────────────────────
+function showSpecies(parent, species) {
+  const parentRankEs = RANK_ES[parent.rank] || parent.rank;
   const sorted = [...species].sort((a, b) => a.name.localeCompare(b.name));
   const m = document.getElementById('main');
   m.innerHTML = `
     <div class="level-header">
       <div>
-        <div class="level-rank">Género</div>
-        <div class="level-title">${genus.name}</div>
+        <div class="level-rank">${parentRankEs}</div>
+        <div class="level-title">${parent.name}</div>
       </div>
       <div class="level-sub">${sorted.length} especies</div>
     </div>
@@ -1079,7 +1032,6 @@ function showSpecies(genus, species) {
         <div class="sp-obs">${formatCount(sp.observations)} obs.</div>
       </div>
     `;
-    // Seen button — stop propagation so it doesn't open the modal
     card.querySelector('.seen-btn').addEventListener('click', async e => {
       e.stopPropagation();
       await toggleSeen(sp);
@@ -1125,8 +1077,6 @@ function formatCount(n) {
 
 // ─── MODAL ────────────────────────────────────────────────────
 let currentMap = null;
-
-// ─── GALLERY STATE ────────────────────────────────────────────
 let galleryPhotos = [];
 let galleryIndex  = 0;
 
@@ -1169,7 +1119,6 @@ function openModal(sp) {
   document.body.style.overflow = 'hidden';
   if (currentMap) { currentMap.remove(); currentMap = null; }
 
-  // Wire seen button
   setTimeout(() => {
     const btn = document.getElementById('modalSeenBtn');
     if (btn) btn.addEventListener('click', async () => {
@@ -1177,7 +1126,6 @@ function openModal(sp) {
       const seen = isSeen(sp.id);
       btn.classList.toggle('seen', seen);
       btn.textContent = seen ? '✓ Vista' : '○ Marcar como vista';
-      // Update card in background if visible
       const card = document.querySelector(`.sp-card[data-sp-id="${sp.id}"]`);
       if (card) {
         card.classList.toggle('seen-card', seen);
@@ -1192,17 +1140,13 @@ function openModal(sp) {
 }
 
 async function loadGallery(sp) {
-  // Fetch research-grade observations with photos
   const url = `${API}/observations?taxon_id=${sp.id}&quality_grade=research&photos=true&per_page=24&order_by=votes&locale=es`;
   try {
     const res = await fetch(url);
     const data = await res.json();
     const obs = data.results || [];
-
-    // Collect unique photos (url + attribution)
     const seen = new Set();
     galleryPhotos = [];
-    // Always include the taxon's default photo first
     if (sp.photo) {
       const large = sp.photo.replace('medium', 'large');
       seen.add(large);
@@ -1218,11 +1162,9 @@ async function loadGallery(sp) {
         }
       });
     });
-
     galleryIndex = 0;
     renderGallery();
   } catch(e) {
-    // Fallback: just show the single default photo
     galleryPhotos = sp.photo ? [{ url: sp.photo.replace('medium','large'), thumb: sp.photo, attr: '' }] : [];
     galleryIndex = 0;
     renderGallery();
@@ -1232,19 +1174,12 @@ async function loadGallery(sp) {
 function renderGallery() {
   const wrap = document.getElementById('galleryWrap');
   if (!wrap) return;
-
-  if (!galleryPhotos.length) {
-    wrap.innerHTML = `<div class="modal-no-photo">📷</div>`;
-    return;
-  }
-
+  if (!galleryPhotos.length) { wrap.innerHTML = `<div style="width:100%;aspect-ratio:16/9;background:var(--surface2);border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;font-size:4rem">📷</div>`; return; }
   const p = galleryPhotos[galleryIndex];
   const total = galleryPhotos.length;
-
   wrap.innerHTML = `
     <img class="gallery-main" id="galleryMain" src="${p.url}" alt=""
-      onerror="this.src='${galleryPhotos[galleryIndex]?.thumb || ''}'"
-    >
+      onerror="this.src='${galleryPhotos[galleryIndex]?.thumb || ''}'">
     ${total > 1 ? `<div class="gallery-counter">${galleryIndex + 1} / ${total}</div>` : ''}
     ${galleryIndex > 0 ? `<button class="gallery-nav prev" id="galleryPrev">‹</button>` : ''}
     ${galleryIndex < total - 1 ? `<button class="gallery-nav next" id="galleryNext">›</button>` : ''}
@@ -1254,36 +1189,26 @@ function renderGallery() {
         ${galleryPhotos.map((ph, i) => `
           <img class="gallery-thumb ${i === galleryIndex ? 'active' : ''}"
             src="${ph.thumb}" data-i="${i}" alt=""
-            onerror="this.style.display='none'"
-          >
-        `).join('')}
+            onerror="this.style.display='none'">`).join('')}
       </div>` : ''}
   `;
-
-  // Listeners
   document.getElementById('galleryMain')?.addEventListener('click', () => openLightbox(p.url));
   document.getElementById('galleryPrev')?.addEventListener('click', () => { galleryIndex--; renderGallery(); });
   document.getElementById('galleryNext')?.addEventListener('click', () => { galleryIndex++; renderGallery(); });
   document.getElementById('galleryThumbs')?.querySelectorAll('.gallery-thumb').forEach(el => {
     el.addEventListener('click', () => { galleryIndex = +el.dataset.i; renderGallery(); });
   });
-
-  // Keyboard nav
   wrap._keyHandler = e => {
-    if (e.key === 'ArrowLeft'  && galleryIndex > 0)             { galleryIndex--; renderGallery(); }
+    if (e.key === 'ArrowLeft'  && galleryIndex > 0) { galleryIndex--; renderGallery(); }
     if (e.key === 'ArrowRight' && galleryIndex < galleryPhotos.length - 1) { galleryIndex++; renderGallery(); }
   };
   document.removeEventListener('keydown', wrap._keyHandler);
   document.addEventListener('keydown', wrap._keyHandler);
-
-  // Scroll active thumb into view
   setTimeout(() => {
-    const activeThumb = document.querySelector('.gallery-thumb.active');
-    activeThumb?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    document.querySelector('.gallery-thumb.active')?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, 50);
 }
 
-// Lightbox
 function openLightbox(url) {
   document.getElementById('lightboxImg').src = url;
   document.getElementById('lightbox').classList.add('open');
@@ -1294,69 +1219,35 @@ document.getElementById('lightbox').addEventListener('click', () => {
 
 async function loadMap(sp) {
   try {
-    // Fetch up to 200 research-grade observations with coordinates
     const url = `https://api.inaturalist.org/v1/observations?taxon_id=${sp.id}&quality_grade=research&geo=true&per_page=200&order_by=observed_on&locale=es`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('no data');
     const data = await res.json();
     const obs = (data.results || []).filter(o => o.geojson);
-
     if (!obs.length) {
       document.getElementById('mapLoading').innerHTML = '<span style="color:var(--dim)">Sin observaciones geolocalizadas</span>';
       return;
     }
-
-    // Show map, hide loader
     document.getElementById('mapLoading').style.display = 'none';
     const mapEl = document.getElementById('speciesMap');
     mapEl.style.display = 'block';
-
-    // Init Leaflet map
-    const map = L.map('speciesMap', {
-      zoom: 2, center: [20, 0],
-      zoomControl: true, attributionControl: false,
-    });
+    const map = L.map('speciesMap', { zoom: 2, center: [20, 0], zoomControl: true, attributionControl: false });
     currentMap = map;
-
-    // Dark tile layer (CartoDB dark matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19
-    }).addTo(map);
-
-    // Labels on top
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19, opacity: 0.6
-    }).addTo(map);
-
-    // Custom circle marker
-    const markerStyle = {
-      radius: 5, fillColor: '#7ee787', color: '#0d1117',
-      weight: 1, opacity: 0.9, fillOpacity: 0.7
-    };
-
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, opacity: 0.6 }).addTo(map);
+    const markerStyle = { radius: 5, fillColor: '#7ee787', color: '#0d1117', weight: 1, opacity: 0.9, fillOpacity: 0.7 };
     const bounds = [];
     obs.forEach(o => {
       const [lng, lat] = o.geojson.coordinates;
       bounds.push([lat, lng]);
       const marker = L.circleMarker([lat, lng], markerStyle).addTo(map);
       const date = o.observed_on ? o.observed_on.slice(0, 10) : 'fecha desconocida';
-      const place = o.place_guess || '';
-      marker.bindPopup(`
-        <div style="font-style:italic;margin-bottom:2px">${sp.name}</div>
-        <div style="color:var(--muted)">${place}</div>
-        <div style="color:var(--dim);margin-top:2px">${date}</div>
-      `);
+      marker.bindPopup(`<div style="font-style:italic;margin-bottom:2px">${sp.name}</div><div style="color:var(--muted)">${o.place_guess || ''}</div><div style="color:var(--dim);margin-top:2px">${date}</div>`);
     });
-
-    // Fit map to observations
     if (bounds.length) map.fitBounds(bounds, { padding: [20, 20], maxZoom: 7 });
-
-    document.getElementById('mapNote').textContent =
-      `${obs.length} observaciones verificadas · iNaturalist`;
-
+    document.getElementById('mapNote').textContent = `${obs.length} observaciones verificadas · iNaturalist`;
   } catch(e) {
-    document.getElementById('mapLoading').innerHTML =
-      '<span style="color:var(--dim)">No se pudo cargar el mapa</span>';
+    document.getElementById('mapLoading').innerHTML = '<span style="color:var(--dim)">No se pudo cargar el mapa</span>';
   }
 }
 
@@ -1369,36 +1260,25 @@ function closeModal() {
   if (currentMap) { currentMap.remove(); currentMap = null; }
 }
 
-// ─── SWIPE DOWN TO CLOSE (mobile) ─────────────────────────────
+// Swipe to close on mobile
 (function() {
   const sheet = document.getElementById('modalSheet');
   let startY = 0, isDragging = false;
-
   sheet.addEventListener('touchstart', e => {
-    // Only drag from the handle area or top 60px
     if (e.target.classList.contains('modal-handle') || e.touches[0].clientY - sheet.getBoundingClientRect().top < 60) {
-      startY = e.touches[0].clientY;
-      isDragging = true;
-      sheet.style.transition = 'none';
+      startY = e.touches[0].clientY; isDragging = true; sheet.style.transition = 'none';
     }
   }, { passive: true });
-
   sheet.addEventListener('touchmove', e => {
     if (!isDragging) return;
     const dy = Math.max(0, e.touches[0].clientY - startY);
     sheet.style.transform = `translateY(${dy}px)`;
   }, { passive: true });
-
   sheet.addEventListener('touchend', e => {
     if (!isDragging) return;
-    isDragging = false;
-    sheet.style.transition = '';
-    const dy = e.changedTouches[0].clientY - startY;
-    if (dy > 120) {
-      closeModal();
-    } else {
-      sheet.style.transform = '';
-    }
+    isDragging = false; sheet.style.transition = '';
+    if (e.changedTouches[0].clientY - startY > 120) closeModal();
+    else sheet.style.transform = '';
   });
 })();
 
@@ -1424,22 +1304,13 @@ function showError(title, detail, retryFn) {
 }
 
 // ─── SEARCH ───────────────────────────────────────────────────
-const RANK_ICONS = {
-  kingdom: '🌍', phylum: '🔬', class: '📦', order: '📋',
-  family: '🏠', genus: '🔤', species: '🌿', subspecies: '🔬',
-};
-const RANK_ES = {
-  kingdom: 'Reino', phylum: 'Filo', class: 'Clase', order: 'Orden',
-  family: 'Familia', genus: 'Género', species: 'Especie', subspecies: 'Subespecie',
-};
-
 let searchTimer = null;
 let searchFocusIndex = -1;
 let searchResults = [];
 
-const searchInput   = document.getElementById('searchInput');
+const searchInput    = document.getElementById('searchInput');
 const searchDropdown = document.getElementById('searchDropdown');
-const searchClear   = document.getElementById('searchClear');
+const searchClear    = document.getElementById('searchClear');
 
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim();
@@ -1462,23 +1333,19 @@ searchInput.addEventListener('keydown', e => {
     searchFocusIndex = Math.max(searchFocusIndex - 1, 0);
     items.forEach((el, i) => el.classList.toggle('focused', i === searchFocusIndex));
   } else if (e.key === 'Enter') {
-    if (searchFocusIndex >= 0 && searchResults[searchFocusIndex]) {
+    if (searchFocusIndex >= 0 && searchResults[searchFocusIndex])
       selectSearchResult(searchResults[searchFocusIndex]);
-    }
   } else if (e.key === 'Escape') {
-    closeDropdown();
-    searchInput.blur();
+    closeDropdown(); searchInput.blur();
   }
 });
 
 searchClear.addEventListener('click', () => {
   searchInput.value = '';
   searchClear.classList.remove('visible');
-  closeDropdown();
-  searchInput.focus();
+  closeDropdown(); searchInput.focus();
 });
 
-// Close when clicking outside
 document.addEventListener('click', e => {
   if (!document.getElementById('searchWrap').contains(e.target)) closeDropdown();
 });
@@ -1486,8 +1353,7 @@ document.addEventListener('click', e => {
 function closeDropdown() {
   searchDropdown.classList.remove('open');
   searchDropdown.innerHTML = '';
-  searchFocusIndex = -1;
-  searchResults = [];
+  searchFocusIndex = -1; searchResults = [];
 }
 
 async function doSearch(q) {
@@ -1497,13 +1363,13 @@ async function doSearch(q) {
     if (!res.ok) throw new Error();
     const data = await res.json();
     searchResults = data.results || [];
-    renderDropdown(searchResults, q);
+    renderSearchDropdown(searchResults, q);
   } catch(e) {
     searchDropdown.innerHTML = `<div class="search-msg">Error al buscar</div>`;
   }
 }
 
-function renderDropdown(results, q) {
+function renderSearchDropdown(results, q) {
   searchFocusIndex = -1;
   if (!results.length) {
     searchDropdown.innerHTML = `<div class="search-msg">Sin resultados para "${q}"</div>`;
@@ -1515,7 +1381,6 @@ function renderDropdown(results, q) {
     const rank  = taxon.rank || '';
     const icon  = RANK_ICONS[rank] || '🔬';
     const rankEs = RANK_ES[rank] || rank;
-
     const el = document.createElement('div');
     el.className = 'search-result';
     el.innerHTML = `
@@ -1528,7 +1393,7 @@ function renderDropdown(results, q) {
       </div>
       <span class="sr-rank">${rankEs}</span>
     `;
-    el.addEventListener('mousedown', e => e.preventDefault()); // prevent input blur
+    el.addEventListener('mousedown', e => e.preventDefault());
     el.addEventListener('click', () => selectSearchResult(taxon));
     searchDropdown.appendChild(el);
   });
@@ -1541,85 +1406,31 @@ async function selectSearchResult(taxon) {
 
   const rank = taxon.rank;
 
-  // If species → open modal directly
+  // Species/subspecies → open modal
   if (rank === 'species' || rank === 'subspecies') {
-    const sp = {
-      id: taxon.id,
-      name: taxon.name,
+    openModal({
+      id: taxon.id, name: taxon.name,
       common: taxon.preferred_common_name || '',
       photo: taxon.default_photo?.medium_url || taxon.default_photo?.url || null,
       observations: taxon.observations_count || 0,
       inatUrl: `https://www.inaturalist.org/taxa/${taxon.id}`,
       wikipedia: taxon.wikipedia_url || null,
-    };
-    openModal(sp);
+      ancestor_ids: taxon.ancestor_ids || [],
+    });
     return;
   }
 
-  // Otherwise navigate into that taxon as a level
-  const nextRank = { order: 'family', family: 'genus', genus: 'species', class: 'order', phylum: 'order', kingdom: 'class' }[rank] || 'species';
-  const rankEs = RANK_ES[rank] || rank;
-  const nextRankEs = RANK_ES[nextRank] || nextRank;
-
-  showLoading(`Cargando ${nextRankEs}s de ${taxon.name}…`);
-  try {
-    const children = await cachedChildren(taxon.id, nextRank);
-    if (!children.length) throw new Error(`No se encontraron ${nextRankEs}s.`);
-
-    // Reset nav and push a single level
-    navStack.length = 0;
-    pushNav(taxon.name, () => {
-      const sorted = [...children].sort((a, b) => a.name.localeCompare(b.name));
-      const m = document.getElementById('main');
-      m.innerHTML = `
-        <div class="level-header">
-          <div>
-            <div class="level-rank">${rankEs}</div>
-            <div class="level-title">${taxon.name}</div>
-          </div>
-          <div class="level-sub">${sorted.length} ${nextRankEs}s</div>
-        </div>
-        <div class="card-grid" id="grid"></div>
-      `;
-      sorted.forEach(child => {
-        const childNextRank = { order: 'family', family: 'genus', genus: 'species' }[nextRank];
-        const sppCount = child.complete_species_count;
-        const pills = sppCount ? [`${sppCount.toLocaleString()} especies`] : [formatCount(child.observations_count) + ' obs.'];
-        const card = makeCard(nextRankEs, child.name, child.preferred_common_name || '',
-          pills, child.default_photo?.medium_url || child.default_photo?.url || null);
-        card.addEventListener('click', () => {
-          if (nextRank === 'genus') {
-            enterGenus(child);
-          } else if (nextRank === 'family') {
-            enterFamily(child);
-          } else if (nextRank === 'order') {
-            enterOrder(child);
-          } else if (nextRank === 'species') {
-            // treat as species card
-            const sp = {
-              id: child.id, name: child.name,
-              common: child.preferred_common_name || '',
-              photo: child.default_photo?.medium_url || null,
-              observations: child.observations_count || 0,
-              inatUrl: `https://www.inaturalist.org/taxa/${child.id}`,
-              wikipedia: child.wikipedia_url || null,
-            };
-            openModal(sp);
-          }
-        });
-        document.getElementById('grid').appendChild(card);
-      });
-    });
-  } catch(e) {
-    showError('Error al cargar', e.message);
-  }
+  // For any other rank, navigate into it using the generic drill-down
+  navStack.length = 0;
+  history.replaceState({ depth: 0 }, '', '');
+  await enterTaxon(taxon.id, taxon.name, rank);
 }
 
 // ─── PLACE FILTER ─────────────────────────────────────────────
-const placeInput     = document.getElementById('placeInput');
-const placeClear     = document.getElementById('placeClear');
-const placeDropdown  = document.getElementById('placeDropdown');
-const activePlaceEl  = document.getElementById('activePlace');
+const placeInput        = document.getElementById('placeInput');
+const placeClear        = document.getElementById('placeClear');
+const placeDropdown     = document.getElementById('placeDropdown');
+const activePlaceEl     = document.getElementById('activePlace');
 const activePlaceNameEl = document.getElementById('activePlaceName');
 
 let placeTimer = null;
@@ -1633,9 +1444,7 @@ const PLACE_TYPE_LABELS = {
   9: 'País', 10: 'Parque', 12: 'País', 13: 'Región', 14: 'Océano',
   24: 'Comarca', 29: 'País', 100: 'Comunidad', 101: 'Condado', 102: 'Ciudad',
 };
-const PLACE_TYPE_ICONS = {
-  1: '🏳️', 2: '📍', 8: '🌍', 9: '🏳️', 10: '🌲', 29: '🏳️',
-};
+const PLACE_TYPE_ICONS = { 1: '🏳️', 2: '📍', 8: '🌍', 9: '🏳️', 10: '🌲', 29: '🏳️' };
 
 function ensureDropdownStructure() {
   if (!document.getElementById('placeResultsList')) {
@@ -1674,9 +1483,7 @@ placeInput.addEventListener('keydown', e => {
     if (placeResults[placeFocusIndex]) showPreview(placeResults[placeFocusIndex]);
   } else if (e.key === 'Enter' && placeFocusIndex >= 0) {
     selectPlace(placeResults[placeFocusIndex]);
-  } else if (e.key === 'Escape') {
-    closePlaceDropdown(); placeInput.blur();
-  }
+  } else if (e.key === 'Escape') { closePlaceDropdown(); placeInput.blur(); }
 });
 
 placeClear.addEventListener('click', () => {
@@ -1687,7 +1494,6 @@ placeClear.addEventListener('click', () => {
 document.addEventListener('click', e => {
   if (!document.getElementById('placeWrap').contains(e.target)) closePlaceDropdown();
 });
-
 document.getElementById('activePlaceClear').addEventListener('click', clearPlaceFilter);
 
 function closePlaceDropdown() {
@@ -1715,10 +1521,7 @@ function renderPlaceDropdown(results) {
   placeFocusIndex = -1;
   ensureDropdownStructure();
   const list = document.getElementById('placeResultsList');
-  if (!results.length) {
-    list.innerHTML = `<div class="place-msg">Sin resultados</div>`;
-    return;
-  }
+  if (!results.length) { list.innerHTML = `<div class="place-msg">Sin resultados</div>`; return; }
   list.innerHTML = '';
   results.forEach((place, i) => {
     const icon = PLACE_TYPE_ICONS[place.place_type] || '📍';
@@ -1738,21 +1541,15 @@ function renderPlaceDropdown(results) {
     el.addEventListener('click', () => selectPlace(place));
     list.appendChild(el);
   });
-  // Auto-preview first result
   if (results[0]) setTimeout(() => showPreview(results[0]), 350);
 }
 
-// Cache de geometrías para no repetir fetches
 const geoCache = {};
-
 function obtenerGeometria(placeId) {
   if (geoCache[placeId]) return geoCache[placeId];
   geoCache[placeId] = fetch(`${API}/places/${placeId}`)
     .then(r => r.ok ? r.json() : null)
-    .then(data => {
-      if (!data || !data.results || !data.results[0]) return null;
-      return data.results[0].geometry_geojson || null;
-    })
+    .then(data => data?.results?.[0]?.geometry_geojson || null)
     .catch(() => null);
   return geoCache[placeId];
 }
@@ -1762,11 +1559,8 @@ async function showPreview(place) {
   const mapEl     = document.getElementById('placePreviewMap');
   const labelEl   = document.getElementById('placePreviewLabelInner');
   if (!previewEl || !mapEl) return;
-
   previewEl.classList.add('visible');
   if (labelEl) labelEl.textContent = place.display_name || place.name;
-
-  // Init Leaflet map once, then invalidate size so tiles render correctly
   if (!previewMap) {
     previewMap = L.map('placePreviewMap', {
       zoomControl: false, attributionControl: false,
@@ -1774,40 +1568,21 @@ async function showPreview(place) {
       doubleClickZoom: false, touchZoom: false,
       center: [20, 0], zoom: 2,
     });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19
-    }).addTo(previewMap);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19, opacity: 0.7
-    }).addTo(previewMap);
-    // Force Leaflet to recalculate size after the element becomes visible
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(previewMap);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, opacity: 0.7 }).addTo(previewMap);
     setTimeout(() => previewMap.invalidateSize(), 50);
   } else {
     previewMap.invalidateSize();
   }
-
-  // Remove previous GeoJSON/marker layers
-  previewMap.eachLayer(l => {
-    if (l instanceof L.GeoJSON || l instanceof L.CircleMarker) previewMap.removeLayer(l);
-  });
-
-  // Fetch the real polygon geometry
+  previewMap.eachLayer(l => { if (l instanceof L.GeoJSON || l instanceof L.CircleMarker) previewMap.removeLayer(l); });
   const geojson = await obtenerGeometria(place.id);
-
   if (geojson) {
     try {
       const geo = typeof geojson === 'string' ? JSON.parse(geojson) : geojson;
-      const layer = L.geoJSON(geo, {
-        style: { color: '#58a6ff', weight: 2, fillColor: '#58a6ff', fillOpacity: 0.18 }
-      }).addTo(previewMap);
+      const layer = L.geoJSON(geo, { style: { color: '#58a6ff', weight: 2, fillColor: '#58a6ff', fillOpacity: 0.18 } }).addTo(previewMap);
       previewMap.fitBounds(layer.getBounds(), { padding: [16, 16] });
-    } catch(e) {
-      // geometry parse failed — fall through to coordinate fallback
-      mostrarPuntoFallback(place);
-    }
-  } else {
-    mostrarPuntoFallback(place);
-  }
+    } catch(e) { mostrarPuntoFallback(place); }
+  } else { mostrarPuntoFallback(place); }
 }
 
 function mostrarPuntoFallback(place) {
@@ -1815,17 +1590,14 @@ function mostrarPuntoFallback(place) {
   const [lat, lng] = place.location.split(',').map(Number);
   if (isNaN(lat) || isNaN(lng)) return;
   previewMap.setView([lat, lng], 5);
-  L.circleMarker([lat, lng], {
-    radius: 8, color: '#58a6ff', fillColor: '#58a6ff', fillOpacity: 0.8, weight: 2
-  }).addTo(previewMap);
+  L.circleMarker([lat, lng], { radius: 8, color: '#58a6ff', fillColor: '#58a6ff', fillOpacity: 0.8, weight: 2 }).addTo(previewMap);
 }
 
 function selectPlace(place) {
   activePlaceId = place.id;
   activePlaceName = place.display_name || place.name;
   clearCache();
-  placeInput.value = '';
-  placeClear.classList.remove('visible');
+  placeInput.value = ''; placeClear.classList.remove('visible');
   closePlaceDropdown();
   activePlaceNameEl.textContent = activePlaceName;
   activePlaceEl.classList.add('visible');
@@ -1835,14 +1607,14 @@ function selectPlace(place) {
 }
 
 function clearPlaceFilter() {
-  activePlaceId = null;
-  activePlaceName = '';
+  activePlaceId = null; activePlaceName = '';
   clearCache();
   activePlaceEl.classList.remove('visible');
   navStack.length = 0;
   history.replaceState({ depth: 0 }, '', '');
   repaint();
 }
+
 // ─── FIREBASE + GOOGLE AUTH ───────────────────────────────────
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
@@ -1859,24 +1631,18 @@ const firebaseConfig = {
   appId: "1:350606865620:web:3388588abb07359c533741"
 };
 
-const fbApp  = initializeApp(firebaseConfig);
-const auth   = getAuth(fbApp);
-const db     = getFirestore(fbApp);
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
 
 let currentUser = null;
-let seenCache   = {}; // local mirror of Firestore data
+let seenCache   = {};
 
-// ── Auth state listener ───────────────────────────────────────
 onAuthStateChanged(auth, async user => {
-  console.log('Auth state changed:', user ? user.email : 'null');
   currentUser = user;
   updateAuthUI();
-  if (user) {
-    await loadSeenFromFirestore();
-  } else {
-    seenCache = {};
-    updateSeenCounter();
-  }
+  if (user) { await loadSeenFromFirestore(); }
+  else { seenCache = {}; updateSeenCounter(); }
 });
 
 function showAuthError(e) {
@@ -1885,7 +1651,6 @@ function showAuthError(e) {
     'auth/popup-blocked': 'El navegador bloqueó el popup. Permite popups para esta página.',
     'auth/network-request-failed': 'Error de red. Comprueba tu conexión.',
   }[e.code] || `Error: ${e.message}`;
-
   const div = document.createElement('div');
   div.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent3);border-radius:10px;padding:14px 20px;z-index:3000;max-width:340px;font-size:0.82rem;font-family:DM Sans,sans-serif;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,0.5)';
   div.innerHTML = `<b style="color:var(--accent3)">Error de autenticación</b><br><span style="color:var(--muted)">${msg}</span><br><small style="color:var(--dim);font-family:DM Mono,monospace">${e.code}</small>`;
@@ -1899,10 +1664,7 @@ function updateAuthUI() {
   if (!btn) return;
   if (currentUser) {
     btn.title = 'Cerrar sesión';
-    if (avatar) {
-      avatar.style.backgroundImage = `url(${currentUser.photoURL})`;
-      avatar.style.display = 'block';
-    }
+    if (avatar) { avatar.style.backgroundImage = `url(${currentUser.photoURL})`; avatar.style.display = 'block'; }
     btn.querySelector('.auth-label').textContent = currentUser.displayName?.split(' ')[0] || 'Yo';
   } else {
     if (avatar) avatar.style.display = 'none';
@@ -1912,38 +1674,26 @@ function updateAuthUI() {
 
 async function handleAuth() {
   if (currentUser) {
-    if (confirm(`¿Cerrar sesión de ${currentUser.displayName}?`)) {
-      await signOut(auth);
-    }
+    if (confirm(`¿Cerrar sesión de ${currentUser.displayName}?`)) await signOut(auth);
   } else {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      const result = await signInWithPopup(auth, provider);
-      console.log('Login OK:', result.user.email);
+      await signInWithPopup(auth, provider);
     } catch(e) {
-      console.error('Login error:', e.code, e.message);
-      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-        showAuthError(e);
-      }
+      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') showAuthError(e);
     }
   }
 }
 
-// ── Firestore helpers ─────────────────────────────────────────
-function userDocRef() {
-  return doc(db, 'users', currentUser.uid);
-}
+function userDocRef() { return doc(db, 'users', currentUser.uid); }
 
 async function loadSeenFromFirestore() {
   try {
     const snap = await getDoc(userDocRef());
     seenCache = snap.exists() ? (snap.data().seen || {}) : {};
-  } catch(e) {
-    seenCache = {};
-  }
+  } catch(e) { seenCache = {}; }
   updateSeenCounter();
-  // Refresh current view if showing species
   const grid = document.getElementById('grid');
   if (grid) {
     grid.querySelectorAll('.sp-card').forEach(card => {
@@ -1957,20 +1707,13 @@ async function loadSeenFromFirestore() {
   }
 }
 
-// ── Seen species API (now uses Firestore) ─────────────────────
-function isSeen(id) {
-  return !!seenCache[id];
-}
+function isSeen(id) { return !!seenCache[id]; }
 
 async function toggleSeen(sp) {
-  if (!currentUser) {
-    showLoginPrompt();
-    return;
-  }
+  if (!currentUser) { showLoginPrompt(); return; }
   const wasSeen = !!seenCache[sp.id];
-  if (wasSeen) {
-    delete seenCache[sp.id];
-  } else {
+  if (wasSeen) { delete seenCache[sp.id]; }
+  else {
     seenCache[sp.id] = {
       id: sp.id, name: sp.name, common: sp.common || '',
       photo: sp.photo || null, inatUrl: sp.inatUrl,
@@ -1979,22 +1722,15 @@ async function toggleSeen(sp) {
     };
   }
   updateSeenCounter();
-  // Write to Firestore
   try {
-    if (wasSeen) {
-      await updateDoc(userDocRef(), { [`seen.${sp.id}`]: deleteField() });
-    } else {
-      await setDoc(userDocRef(), { seen: { [sp.id]: seenCache[sp.id] } }, { merge: true });
-    }
-  } catch(e) {
-    console.error('Firestore write error:', e);
-  }
+    if (wasSeen) await updateDoc(userDocRef(), { [`seen.${sp.id}`]: deleteField() });
+    else await setDoc(userDocRef(), { seen: { [sp.id]: seenCache[sp.id] } }, { merge: true });
+  } catch(e) { console.error('Firestore write error:', e); }
 }
 
 function updateSeenCounter() {
-  const count = Object.keys(seenCache).length;
   const el = document.getElementById('mySpeciesCount');
-  if (el) el.textContent = count;
+  if (el) el.textContent = Object.keys(seenCache).length;
 }
 
 function showLoginPrompt() {
@@ -2011,22 +1747,12 @@ function showLoginPrompt() {
       <button id="loginPromptClose" style="margin-top:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem">Cancelar</button>
     </div>
   `;
-  m.querySelector('#loginPromptBtn').addEventListener('click', async () => {
-    document.body.removeChild(m);
-    await handleAuth();
-  });
+  m.querySelector('#loginPromptBtn').addEventListener('click', async () => { document.body.removeChild(m); await handleAuth(); });
   m.querySelector('#loginPromptClose').addEventListener('click', () => document.body.removeChild(m));
   document.body.appendChild(m);
 }
 
 // ─── MY SPECIES PAGE ──────────────────────────────────────────
-function showMySpecies() {
-  if (!currentUser) { showLoginPrompt(); return; }
-  pushNav('Mis especies', () => renderMySpecies());
-}
-
-// Mapping from iNaturalist taxon IDs to group info
-// These are the ancestor IDs for each major class
 const TAXON_GROUPS = [
   { id: 26036,  name: 'Reptiles',    icon: '🦎' },
   { id: 3,      name: 'Aves',        icon: '🦅' },
@@ -2039,28 +1765,25 @@ const TAXON_GROUPS = [
   { id: 47170,  name: 'Hongos',      icon: '🍄' },
   { id: 48222,  name: 'Moluscos',    icon: '🐚' },
   { id: 47549,  name: 'Crustáceos',  icon: '🦞' },
+  { id: 144128, name: 'Miriápodos',  icon: '🐛' },
 ];
 
 function getGroupForSpecies(sp) {
   const ancestors = sp.ancestor_ids || [];
-  for (const g of TAXON_GROUPS) {
-    if (ancestors.includes(g.id)) return g;
-  }
+  for (const g of TAXON_GROUPS) { if (ancestors.includes(g.id)) return g; }
   return { id: 0, name: 'Otros', icon: '🔬' };
 }
 
+function showMySpecies() {
+  if (!currentUser) { showLoginPrompt(); return; }
+  pushNav('Mis especies', () => renderMySpecies());
+}
+
 function renderMySpecies() {
-  const species = Object.values(seenCache).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
-
+  const species = Object.values(seenCache).sort((a, b) => a.name.localeCompare(b.name));
   const m = document.getElementById('main');
-
-  // Stats
-  const firstDate = species.length > 0
-    ? [...species].sort((a,b) => new Date(a.seenAt)-new Date(b.seenAt))[0].seenAt : null;
-  const lastDate = species.length > 0
-    ? [...species].sort((a,b) => new Date(b.seenAt)-new Date(a.seenAt))[0].seenAt : null;
+  const firstDate = species.length > 0 ? [...species].sort((a,b) => new Date(a.seenAt)-new Date(b.seenAt))[0].seenAt : null;
+  const lastDate  = species.length > 0 ? [...species].sort((a,b) => new Date(b.seenAt)-new Date(a.seenAt))[0].seenAt : null;
 
   m.innerHTML = `
     <div class="level-header">
@@ -2116,7 +1839,6 @@ function renderMySpecies() {
     }
   `;
 
-  // Wire iNat import
   document.getElementById('inatImportBtn').addEventListener('click', () => {
     const username = document.getElementById('inatUserInput').value.trim();
     if (!username) { alert('Introduce tu nombre de usuario de iNaturalist'); return; }
@@ -2126,9 +1848,8 @@ function renderMySpecies() {
     if (e.key === 'Enter') document.getElementById('inatImportBtn').click();
   });
 
-  if (species.length === 0) return;
+  if (!species.length) return;
 
-  // Group species by taxonomic group
   const groups = {};
   species.forEach(sp => {
     const g = getGroupForSpecies(sp);
@@ -2136,7 +1857,6 @@ function renderMySpecies() {
     groups[g.name].species.push(sp);
   });
 
-  // Sort groups: known groups first in TAXON_GROUPS order, then "Otros"
   const orderedGroups = [
     ...TAXON_GROUPS.map(g => groups[g.name]).filter(Boolean),
     ...(groups['Otros'] ? [groups['Otros']] : []),
@@ -2144,18 +1864,16 @@ function renderMySpecies() {
 
   const container = document.getElementById('myGroupsContainer');
   orderedGroups.forEach(group => {
-    // Group header
     const header = document.createElement('div');
     header.style.cssText = 'display:flex;align-items:center;gap:10px;margin:28px 0 14px';
     header.innerHTML = `
       <span style="font-size:1.6rem">${group.icon}</span>
-      <span style="font-family:"Playfair Display",serif;font-style:italic;font-size:1.2rem;font-weight:700">${group.name}</span>
-      <span style="font-family:"DM Mono",monospace;font-size:0.7rem;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:99px">${group.species.length} especies</span>
+      <span style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.2rem;font-weight:700">${group.name}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:99px">${group.species.length} especies</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     `;
     container.appendChild(header);
 
-    // Species grid for this group
     const grid = document.createElement('div');
     grid.className = 'species-grid';
     group.species.forEach(sp => {
@@ -2190,8 +1908,7 @@ function renderMySpecies() {
 
   document.getElementById('clearAllBtn').addEventListener('click', async () => {
     if (confirm('¿Borrar todo el registro de especies vistas?')) {
-      seenCache = {};
-      updateSeenCounter();
+      seenCache = {}; updateSeenCounter();
       try { await setDoc(userDocRef(), { seen: {} }); } catch(e) {}
       renderMySpecies();
     }
@@ -2203,84 +1920,66 @@ async function importFromInat(username) {
   const btn    = document.getElementById('inatImportBtn');
   const status = document.getElementById('inatImportStatus');
   if (!btn || !status) return;
-
-  btn.disabled = true;
-  btn.textContent = '…';
+  btn.disabled = true; btn.textContent = '…';
   status.style.display = 'block';
   status.textContent = 'Buscando usuario…';
-
   try {
-    // Verify user exists
     const userRes = await fetch(`${API}/users/autocomplete?q=${encodeURIComponent(username)}&per_page=5`);
     const userData = await userRes.json();
     const user = (userData.results || []).find(u => u.login.toLowerCase() === username.toLowerCase());
     if (!user) throw new Error(`Usuario "${username}" no encontrado en iNaturalist`);
-
     status.textContent = `✓ Usuario encontrado: ${user.name || user.login}. Cargando observaciones…`;
-
-    // Fetch all research-grade species observations (paginated)
-    let page = 1;
-    let imported = 0;
-    let total = null;
+    let page = 1, imported = 0;
     const newEntries = {};
-
     while (true) {
       const url = `${API}/observations/species_counts?user_login=${encodeURIComponent(user.login)}&quality_grade=research&per_page=100&page=${page}&locale=es`;
       const res = await fetch(url);
       if (!res.ok) break;
       const data = await res.json();
-
-      if (total === null) total = data.total_results;
       const results = data.results || [];
       if (!results.length) break;
-
       for (const r of results) {
         const t = r.taxon;
         if (!seenCache[t.id]) {
           newEntries[t.id] = {
-            id: t.id, name: t.name,
-            common: t.preferred_common_name || '',
+            id: t.id, name: t.name, common: t.preferred_common_name || '',
             photo: t.default_photo?.medium_url || t.default_photo?.url || null,
             inatUrl: `https://www.inaturalist.org/taxa/${t.id}`,
             ancestor_ids: t.ancestor_ids || [],
-            seenAt: new Date().toISOString(),
-            source: 'inat_import',
+            seenAt: new Date().toISOString(), source: 'inat_import',
           };
           imported++;
         }
       }
-
       status.textContent = `Importando… ${Object.keys(seenCache).length + imported} especies (página ${page})`;
-
       if (results.length < 100) break;
       page++;
-      await new Promise(res => setTimeout(res, 150)); // avoid rate limiting
+      await new Promise(res => setTimeout(res, 150));
     }
-
     if (imported === 0) {
       status.textContent = '✓ Todo ya estaba importado, nada nuevo que añadir.';
     } else {
-      // Merge into seenCache and save to Firestore
       Object.assign(seenCache, newEntries);
       await setDoc(userDocRef(), { seen: seenCache }, { merge: true });
       updateSeenCounter();
       status.textContent = `✓ ¡Importadas ${imported} especies nuevas de @${user.login}!`;
-      // Re-render after a moment
       setTimeout(() => renderMySpecies(), 1500);
     }
-
   } catch(e) {
     status.textContent = `✗ Error: ${e.message}`;
-    console.error('iNat import error:', e);
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Importar';
+    btn.disabled = false; btn.textContent = 'Importar';
   }
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
 document.getElementById('authBtn').addEventListener('click', handleAuth);
 document.getElementById('mySpeciesBtn').addEventListener('click', showMySpecies);
+document.getElementById('logoBtn').addEventListener('click', () => {
+  navStack.length = 0;
+  history.replaceState({ depth: 0 }, '', '');
+  repaint();
+});
 updateSeenCounter();
 renderHome();
 </script>

@@ -337,6 +337,53 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
   text-align: center;
 }
 
+/* MAP POPOVER */
+.map-btn {
+  position: absolute; bottom: 8px; left: 8px; z-index: 2;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+  color: rgba(255,255,255,0.85); font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; line-height: 1;
+}
+.map-btn:hover { border-color: var(--accent2); background: rgba(0,0,0,0.65); }
+.map-btn.active { border-color: var(--accent2); background: rgba(88,166,255,0.3); }
+
+.map-popover {
+  position: fixed; z-index: 900;
+  width: 300px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  overflow: hidden; pointer-events: none;
+  opacity: 0; transform: scale(0.94) translateY(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.map-popover.visible {
+  opacity: 1; transform: scale(1) translateY(0);
+  pointer-events: all;
+}
+.map-popover-header {
+  padding: 8px 12px 6px;
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: 0.82rem; color: var(--text);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.map-popover-map { width: 300px; height: 200px; display: block; }
+.map-popover-footer {
+  padding: 5px 10px;
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  color: var(--dim); text-align: right;
+}
+.map-popover-loading {
+  width: 300px; height: 200px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  color: var(--dim); font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  background: var(--surface2);
+}
+
 /* ERROR */
 .error-box { text-align: center; padding: 80px 20px; }
 .error-box h3 { font-family: 'Playfair Display', serif; font-style: italic; color: var(--accent3); font-size: 1.4rem; margin-bottom: 8px; }
@@ -417,27 +464,17 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 }
 .auth-google-icon { font-size: 1rem; flex-shrink: 0; }
 
-/* SEEN SPECIES SYSTEM */
-.seen-btn {
-  position: absolute; bottom: 8px; right: 8px; z-index: 2;
-  width: 30px; height: 30px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.3);
-  background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
-  color: rgba(255,255,255,0.7); font-size: 0.9rem;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
-}
-.seen-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,0,0,0.6); }
-.seen-btn.seen { background: var(--accent); border-color: var(--accent); color: #0d1117; }
-.sp-card.seen-card { border-color: rgba(126,231,135,0.4); }
-.sp-card.seen-card .sp-img-wrap::after {
-  content: '✓';
-  position: absolute; top: 6px; right: 6px;
+/* SEEN BADGE — solo visual, no interactivo */
+.seen-badge {
+  position: absolute; top: 6px; right: 6px; z-index: 2;
   background: var(--accent); color: #0d1117;
   border-radius: 50%; width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.7rem; font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  pointer-events: none;
 }
+.sp-card.seen-card { border-color: rgba(126,231,135,0.4); }
 .sp-img-wrap { position: relative; }
 
 /* My species counter badge in header */
@@ -470,19 +507,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 }
 .clear-all-btn:hover { background: rgba(247,129,102,0.1); }
 
-/* Modal seen button */
-.modal-seen-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 18px; border-radius: 8px;
-  border: 1px solid var(--accent); color: var(--accent);
-  background: none; cursor: pointer;
-  font-family: 'DM Mono', monospace; font-size: 0.78rem;
-  transition: all 0.2s; margin-top: 16px; width: 100%;
-  justify-content: center;
-}
-.modal-seen-btn:hover { background: rgba(126,231,135,0.1); }
-.modal-seen-btn.seen { background: var(--accent); color: #0d1117; }
-.modal-seen-btn.seen:hover { background: #5bc96a; }
 .lightbox {
   position: fixed; inset: 0; z-index: 2000;
   background: rgba(0,0,0,0.95); display: flex;
@@ -647,6 +671,18 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 <div class="lightbox" id="lightbox"><img id="lightboxImg" src="" alt=""></div>
 
+<!-- MAP POPOVER -->
+<div class="map-popover" id="mapPopover">
+  <div class="map-popover-header" id="mapPopoverHeader"></div>
+  <div id="mapPopoverBody">
+    <div class="map-popover-loading" id="mapPopoverLoading">
+      <div class="map-spinner" style="width:22px;height:22px;border-top-color:var(--accent2)"></div>
+      <span>Cargando mapa…</span>
+    </div>
+  </div>
+  <div class="map-popover-footer" id="mapPopoverFooter"></div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalSheet">
     <div class="modal-handle"></div>
@@ -656,7 +692,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script type="module">
+<script>
 // ─── CONFIG ────────────────────────────────────────────────────
 
 // Kingdoms shown on the home screen
@@ -1022,9 +1058,8 @@ function showSpecies(parent, species) {
     card.innerHTML = `
       <div class="sp-img-wrap">
         ${img}
-        <button class="seen-btn ${isSeen(sp.id) ? 'seen' : ''}" title="${isSeen(sp.id) ? 'Vista — clic para desmarcar' : 'Marcar como vista'}">
-          ${isSeen(sp.id) ? '✓' : '○'}
-        </button>
+        ${isSeen(sp.id) ? '<div class="seen-badge">✓</div>' : ''}
+        <button class="map-btn" title="Ver distribución">🗺️</button>
       </div>
       <div class="sp-info">
         <div class="sp-sci">${sp.name}</div>
@@ -1032,20 +1067,158 @@ function showSpecies(parent, species) {
         <div class="sp-obs">${formatCount(sp.observations)} obs.</div>
       </div>
     `;
-    card.querySelector('.seen-btn').addEventListener('click', async e => {
+    // Map popover button
+    card.querySelector('.map-btn').addEventListener('click', e => {
       e.stopPropagation();
-      await toggleSeen(sp);
-      const btn = card.querySelector('.seen-btn');
-      const seen = isSeen(sp.id);
-      btn.classList.toggle('seen', seen);
-      btn.textContent = seen ? '✓' : '○';
-      btn.title = seen ? 'Vista — clic para desmarcar' : 'Marcar como vista';
-      card.classList.toggle('seen-card', seen);
+      openMapPopover(sp, e.currentTarget);
     });
     card.addEventListener('click', () => openModal(sp));
     grid.appendChild(card);
   });
 }
+
+// ─── MAP POPOVER ──────────────────────────────────────────────
+let popoverMap = null;
+let popoverSpId = null;
+let popoverCloseTimer = null;
+const obsCache = {}; // cache de observaciones por taxon id
+
+const popover       = document.getElementById('mapPopover');
+const popoverHeader = document.getElementById('mapPopoverHeader');
+const popoverBody   = document.getElementById('mapPopoverBody');
+const popoverFooter = document.getElementById('mapPopoverFooter');
+const popoverLoading = document.getElementById('mapPopoverLoading');
+
+function positionPopover(triggerEl) {
+  const rect = triggerEl.getBoundingClientRect();
+  const pw = 300, ph = 260;
+  const vw = window.innerWidth, vh = window.innerHeight;
+
+  let left = rect.left + rect.width / 2 - pw / 2;
+  let top  = rect.top - ph - 8;
+
+  // Si sale por arriba, mostrar abajo
+  if (top < 8) top = rect.bottom + 8;
+  // Ajustar horizontal
+  if (left < 8) left = 8;
+  if (left + pw > vw - 8) left = vw - pw - 8;
+  // Ajustar vertical si sale por abajo
+  if (top + ph > vh - 8) top = vh - ph - 8;
+
+  popover.style.left = left + 'px';
+  popover.style.top  = top  + 'px';
+}
+
+async function openMapPopover(sp, triggerEl) {
+  // Si ya está abierto para esta especie, ciérralo
+  if (popoverSpId === sp.id && popover.classList.contains('visible')) {
+    closeMapPopover();
+    return;
+  }
+
+  clearTimeout(popoverCloseTimer);
+  popoverSpId = sp.id;
+  triggerEl.classList.add('active');
+
+  // Destruir mapa anterior
+  if (popoverMap) { popoverMap.remove(); popoverMap = null; }
+
+  // Reset UI
+  popoverHeader.textContent = sp.name + (sp.common ? ` · ${sp.common}` : '');
+  popoverBody.innerHTML = `<div class="map-popover-loading" id="mapPopoverLoading">
+    <div class="map-spinner" style="width:22px;height:22px;border-top-color:var(--accent2)"></div>
+    <span>Cargando observaciones…</span>
+  </div>`;
+  popoverFooter.textContent = '';
+
+  positionPopover(triggerEl);
+  popover.classList.add('visible');
+
+  // Marcar botón activo en el DOM para poder limpiarlo luego
+  popover._activeTrigger = triggerEl;
+
+  // Cargar observaciones (con caché)
+  if (!obsCache[sp.id]) {
+    obsCache[sp.id] = fetch(
+      `${API}/observations?taxon_id=${sp.id}&quality_grade=research&geo=true&per_page=100&order_by=observed_on&locale=es`
+    ).then(r => r.ok ? r.json() : null)
+     .then(d => (d?.results || []).filter(o => o.geojson))
+     .catch(() => []);
+  }
+
+  let obs;
+  try { obs = await obsCache[sp.id]; } catch(e) { obs = []; }
+
+  // Si el popover fue cerrado mientras cargaba, salir
+  if (popoverSpId !== sp.id) return;
+
+  // Crear contenedor del mapa
+  const mapEl = document.createElement('div');
+  mapEl.className = 'map-popover-map';
+  mapEl.id = 'mapPopoverMapEl';
+  popoverBody.innerHTML = '';
+  popoverBody.appendChild(mapEl);
+
+  if (!obs.length) {
+    popoverBody.innerHTML = `<div class="map-popover-loading" style="color:var(--dim)">Sin observaciones geolocalizadas</div>`;
+    popoverFooter.textContent = '';
+    return;
+  }
+
+  // Init Leaflet
+  popoverMap = L.map('mapPopoverMapEl', {
+    zoom: 2, center: [20, 0],
+    zoomControl: false, attributionControl: false,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(popoverMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd', maxZoom: 19, opacity: 0.55
+  }).addTo(popoverMap);
+
+  const markerStyle = { radius: 4, fillColor: '#7ee787', color: '#0d1117', weight: 1, opacity: 0.9, fillOpacity: 0.75 };
+  const bounds = [];
+  obs.forEach(o => {
+    const [lng, lat] = o.geojson.coordinates;
+    bounds.push([lat, lng]);
+    L.circleMarker([lat, lng], markerStyle).addTo(popoverMap);
+  });
+
+  if (bounds.length) popoverMap.fitBounds(bounds, { padding: [12, 12], maxZoom: 6 });
+  popoverFooter.textContent = `${obs.length} obs. verificadas · iNaturalist`;
+
+  // Necesario para que Leaflet calcule el tamaño correcto
+  setTimeout(() => popoverMap?.invalidateSize(), 30);
+}
+
+function closeMapPopover() {
+  popover.classList.remove('visible');
+  popoverSpId = null;
+  if (popover._activeTrigger) {
+    popover._activeTrigger.classList.remove('active');
+    popover._activeTrigger = null;
+  }
+  // Destruir mapa al acabar la transición
+  setTimeout(() => {
+    if (popoverMap && !popover.classList.contains('visible')) {
+      popoverMap.remove(); popoverMap = null;
+    }
+  }, 220);
+}
+
+// Cerrar al hacer clic fuera
+document.addEventListener('click', e => {
+  if (!popover.contains(e.target) && !e.target.classList.contains('map-btn')) {
+    closeMapPopover();
+  }
+}, true);
+
+// Cerrar con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeMapPopover();
+});
 
 // ─── HELPERS ──────────────────────────────────────────────────
 function makeCard(rank, name, common, pills, photo) {
@@ -1100,9 +1273,7 @@ function openModal(sp) {
         <a class="modal-link" href="${sp.inatUrl}" target="_blank">🌿 Ver en iNaturalist</a>
         ${sp.wikipedia ? `<a class="modal-link" href="${sp.wikipedia}" target="_blank">📖 Wikipedia</a>` : ''}
       </div>
-      <button class="modal-seen-btn ${isSeen(sp.id) ? 'seen' : ''}" id="modalSeenBtn">
-        ${isSeen(sp.id) ? '✓ Vista' : '○ Marcar como vista'}
-      </button>
+      ${isSeen(sp.id) ? `<div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding:8px 12px;background:rgba(126,231,135,0.08);border:1px solid rgba(126,231,135,0.25);border-radius:8px;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--accent)"><span>✓</span> Observada en iNaturalist</div>` : ''}
       <div class="map-section">
         <div class="map-label">Distribución · observaciones verificadas</div>
         <div class="map-loading" id="mapLoading">
@@ -1118,22 +1289,6 @@ function openModal(sp) {
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
   if (currentMap) { currentMap.remove(); currentMap = null; }
-
-  setTimeout(() => {
-    const btn = document.getElementById('modalSeenBtn');
-    if (btn) btn.addEventListener('click', async () => {
-      await toggleSeen(sp);
-      const seen = isSeen(sp.id);
-      btn.classList.toggle('seen', seen);
-      btn.textContent = seen ? '✓ Vista' : '○ Marcar como vista';
-      const card = document.querySelector(`.sp-card[data-sp-id="${sp.id}"]`);
-      if (card) {
-        card.classList.toggle('seen-card', seen);
-        const cardBtn = card.querySelector('.seen-btn');
-        if (cardBtn) { cardBtn.classList.toggle('seen', seen); cardBtn.textContent = seen ? '✓' : '○'; }
-      }
-    });
-  }, 0);
 
   loadGallery(sp);
   setTimeout(() => loadMap(sp), 50);
@@ -1615,141 +1770,195 @@ function clearPlaceFilter() {
   repaint();
 }
 
-// ─── FIREBASE + GOOGLE AUTH ───────────────────────────────────
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField }
-  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+// ─── iNATURALIST SYNC (sin Firebase) ─────────────────────────
+// Las observaciones se sincronizan desde la API pública de iNat
+// y se guardan en localStorage. No requiere OAuth ni dominio autorizado.
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBqZEzu7mhYr9FcQnPa2NVXSyZkbig4KmA",
-  authDomain: "bioexplorer-d85f5.firebaseapp.com",
-  projectId: "bioexplorer-d85f5",
-  storageBucket: "bioexplorer-d85f5.firebasestorage.app",
-  messagingSenderId: "350606865620",
-  appId: "1:350606865620:web:3388588abb07359c533741"
-};
+let currentUser = null;   // { login, name, icon }
+let seenCache   = {};     // taxon_id (string) → { id, name, ... }
 
-const fbApp = initializeApp(firebaseConfig);
-const auth  = getAuth(fbApp);
-const db    = getFirestore(fbApp);
-
-let currentUser = null;
-let seenCache   = {};
-
-onAuthStateChanged(auth, async user => {
-  currentUser = user;
-  updateAuthUI();
-  if (user) { await loadSeenFromFirestore(); }
-  else { seenCache = {}; updateSeenCounter(); }
-});
-
-function showAuthError(e) {
-  const msg = {
-    'auth/unauthorized-domain': `Dominio no autorizado. Ve a Firebase Console → Authentication → Settings → Dominios autorizados y añade: <b>alex-weilong.github.io</b>`,
-    'auth/popup-blocked': 'El navegador bloqueó el popup. Permite popups para esta página.',
-    'auth/network-request-failed': 'Error de red. Comprueba tu conexión.',
-  }[e.code] || `Error: ${e.message}`;
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent3);border-radius:10px;padding:14px 20px;z-index:3000;max-width:340px;font-size:0.82rem;font-family:DM Sans,sans-serif;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,0.5)';
-  div.innerHTML = `<b style="color:var(--accent3)">Error de autenticación</b><br><span style="color:var(--muted)">${msg}</span><br><small style="color:var(--dim);font-family:DM Mono,monospace">${e.code}</small>`;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 8000);
-}
-
-function updateAuthUI() {
-  const btn = document.getElementById('authBtn');
-  const avatar = document.getElementById('authAvatar');
-  if (!btn) return;
-  if (currentUser) {
-    btn.title = 'Cerrar sesión';
-    if (avatar) { avatar.style.backgroundImage = `url(${currentUser.photoURL})`; avatar.style.display = 'block'; }
-    btn.querySelector('.auth-label').textContent = currentUser.displayName?.split(' ')[0] || 'Yo';
-  } else {
-    if (avatar) avatar.style.display = 'none';
-    btn.querySelector('.auth-label').textContent = 'Entrar';
-  }
-}
-
-async function handleAuth() {
-  if (currentUser) {
-    if (confirm(`¿Cerrar sesión de ${currentUser.displayName}?`)) await signOut(auth);
-  } else {
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      await signInWithPopup(auth, provider);
-    } catch(e) {
-      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') showAuthError(e);
-    }
-  }
-}
-
-function userDocRef() { return doc(db, 'users', currentUser.uid); }
-
-async function loadSeenFromFirestore() {
+function saveLocal() {
   try {
-    const snap = await getDoc(userDocRef());
-    seenCache = snap.exists() ? (snap.data().seen || {}) : {};
-  } catch(e) { seenCache = {}; }
-  updateSeenCounter();
-  const grid = document.getElementById('grid');
-  if (grid) {
-    grid.querySelectorAll('.sp-card').forEach(card => {
-      const id = parseInt(card.dataset.spId);
-      if (!id) return;
-      const seen = !!seenCache[id];
-      card.classList.toggle('seen-card', seen);
-      const btn = card.querySelector('.seen-btn');
-      if (btn) { btn.classList.toggle('seen', seen); btn.textContent = seen ? '✓' : '○'; }
-    });
-  }
+    localStorage.setItem('bioexp_user', JSON.stringify(currentUser));
+    localStorage.setItem('bioexp_seen', JSON.stringify(seenCache));
+  } catch(e) {}
+}
+function loadLocal() {
+  try {
+    const u = localStorage.getItem('bioexp_user');
+    const s = localStorage.getItem('bioexp_seen');
+    if (u) currentUser = JSON.parse(u);
+    if (s) seenCache   = JSON.parse(s);
+  } catch(e) {}
 }
 
 function isSeen(id) { return !!seenCache[id]; }
-
-async function toggleSeen(sp) {
-  if (!currentUser) { showLoginPrompt(); return; }
-  const wasSeen = !!seenCache[sp.id];
-  if (wasSeen) { delete seenCache[sp.id]; }
-  else {
-    seenCache[sp.id] = {
-      id: sp.id, name: sp.name, common: sp.common || '',
-      photo: sp.photo || null, inatUrl: sp.inatUrl,
-      ancestor_ids: sp.ancestor_ids || [],
-      seenAt: new Date().toISOString(),
-    };
-  }
-  updateSeenCounter();
-  try {
-    if (wasSeen) await updateDoc(userDocRef(), { [`seen.${sp.id}`]: deleteField() });
-    else await setDoc(userDocRef(), { seen: { [sp.id]: seenCache[sp.id] } }, { merge: true });
-  } catch(e) { console.error('Firestore write error:', e); }
-}
 
 function updateSeenCounter() {
   const el = document.getElementById('mySpeciesCount');
   if (el) el.textContent = Object.keys(seenCache).length;
 }
 
-function showLoginPrompt() {
+function updateAuthUI() {
+  const btn    = document.getElementById('authBtn');
+  const avatar = document.getElementById('authAvatar');
+  if (!btn) return;
+  btn.querySelector('.auth-google-icon').textContent = '🌿';
+  if (currentUser) {
+    btn.title = 'Cerrar sesión / Resincronizar';
+    if (avatar && currentUser.icon) {
+      avatar.style.backgroundImage = `url(${currentUser.icon})`;
+      avatar.style.display = 'block';
+    }
+    btn.querySelector('.auth-label').textContent = '@' + currentUser.login;
+  } else {
+    if (avatar) avatar.style.display = 'none';
+    btn.querySelector('.auth-label').textContent = 'Conectar iNat';
+  }
+}
+
+// Clic en botón auth: si hay sesión → menú; si no → login
+async function handleAuth() {
+  if (currentUser) {
+    // Menú: resincronizar o cerrar sesión
+    const action = confirm(`@${currentUser.login}\n\nPulsa OK para resincronizar observaciones, o Cancelar y luego usa "Cerrar sesión" en Mis especies.`);
+    if (action) await resync();
+  } else {
+    showInatLoginPrompt();
+  }
+}
+
+async function resync() {
+  const toast = showToast('Sincronizando…', 'muted');
+  try {
+    await syncInatUser(currentUser.login, null);
+    saveLocal(); updateSeenCounter(); refreshSeenBadges();
+    toast.update(`✓ ${Object.keys(seenCache).length} especies sincronizadas`, 'accent');
+  } catch(e) {
+    toast.update(`✗ ${e.message}`, 'accent3');
+  }
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function showToast(msg, color = 'muted') {
+  const d = document.createElement('div');
+  d.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 20px;z-index:3000;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--${color});white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.5);transition:color 0.2s`;
+  d.textContent = msg;
+  document.body.appendChild(d);
+  return {
+    update(m, c) { d.textContent = m; d.style.color = `var(--${c})`; },
+    remove() { d.remove(); }
+  };
+}
+
+function showInatLoginPrompt() {
   const m = document.createElement('div');
-  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px';
   m.innerHTML = `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:340px;text-align:center">
-      <div style="font-size:2.5rem;margin-bottom:12px">🔑</div>
-      <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;margin-bottom:8px">Inicia sesión</div>
-      <div style="color:var(--muted);font-size:0.85rem;margin-bottom:24px">Para guardar tus especies vistas necesitas una cuenta.</div>
-      <button id="loginPromptBtn" style="width:100%;padding:12px;background:#fff;color:#333;border:none;border-radius:8px;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:500">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"> Continuar con Google
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:360px;width:100%;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:12px">🌿</div>
+      <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;margin-bottom:8px">Conectar con iNaturalist</div>
+      <div style="color:var(--muted);font-size:0.8rem;margin-bottom:20px;font-family:'DM Mono',monospace;line-height:1.5">
+        Introduce tu usuario de iNaturalist para sincronizar tus observaciones verificadas y ver qué especies has visto
+      </div>
+      <input id="inatLoginInput" type="text" placeholder="tu_usuario_inat" autocomplete="off" spellcheck="false"
+        style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.9rem;outline:none;margin-bottom:12px;text-align:center">
+      <button id="inatLoginBtn"
+        style="width:100%;padding:12px;background:var(--accent);color:#0d1117;border:none;border-radius:8px;font-size:0.9rem;cursor:pointer;font-family:'DM Mono',monospace;font-weight:600;margin-bottom:8px">
+        Sincronizar
       </button>
-      <button id="loginPromptClose" style="margin-top:12px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem">Cancelar</button>
+      <div id="inatLoginStatus" style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);min-height:18px;line-height:1.5"></div>
+      <button id="inatLoginClose" style="margin-top:10px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:0.82rem">Cancelar</button>
     </div>
   `;
-  m.querySelector('#loginPromptBtn').addEventListener('click', async () => { document.body.removeChild(m); await handleAuth(); });
-  m.querySelector('#loginPromptClose').addEventListener('click', () => document.body.removeChild(m));
+
+  const input  = m.querySelector('#inatLoginInput');
+  const btn    = m.querySelector('#inatLoginBtn');
+  const status = m.querySelector('#inatLoginStatus');
+
+  const doSync = async () => {
+    const login = input.value.trim();
+    if (!login) return;
+    btn.disabled = true; btn.textContent = '…';
+    status.style.color = 'var(--muted)';
+    status.textContent = 'Verificando usuario…';
+    try {
+      await syncInatUser(login, status);
+      saveLocal(); updateAuthUI(); updateSeenCounter(); refreshSeenBadges();
+      status.style.color = 'var(--accent)';
+      setTimeout(() => document.body.removeChild(m), 1000);
+    } catch(e) {
+      status.style.color = 'var(--accent3)';
+      status.textContent = `✗ ${e.message}`;
+      btn.disabled = false; btn.textContent = 'Sincronizar';
+    }
+  };
+
+  btn.addEventListener('click', doSync);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') doSync(); });
+  m.querySelector('#inatLoginClose').addEventListener('click', () => document.body.removeChild(m));
   document.body.appendChild(m);
+  setTimeout(() => input.focus(), 50);
+}
+
+// Descarga todas las species_counts research-grade del usuario
+async function syncInatUser(login, statusEl) {
+  const userRes = await fetch(`${API}/users/autocomplete?q=${encodeURIComponent(login)}&per_page=5`);
+  if (!userRes.ok) throw new Error('Error al contactar iNaturalist');
+  const userData = await userRes.json();
+  const user = (userData.results || []).find(u => u.login.toLowerCase() === login.toLowerCase());
+  if (!user) throw new Error(`Usuario "${login}" no encontrado`);
+
+  if (statusEl) statusEl.textContent = `✓ @${user.login} encontrado. Descargando observaciones…`;
+  currentUser = { login: user.login, name: user.name || user.login, icon: user.icon || null };
+
+  const newSeen = {};
+  let page = 1;
+  while (true) {
+    const url = `${API}/observations/species_counts?user_login=${encodeURIComponent(user.login)}&quality_grade=research&per_page=500&page=${page}&locale=es`;
+    const res = await fetch(url);
+    if (!res.ok) break;
+    const data = await res.json();
+    const results = data.results || [];
+    if (!results.length) break;
+    results.forEach(r => {
+      const t = r.taxon;
+      newSeen[t.id] = {
+        id: t.id, name: t.name,
+        common: t.preferred_common_name || '',
+        photo: t.default_photo?.medium_url || t.default_photo?.url || null,
+        inatUrl: `https://www.inaturalist.org/taxa/${t.id}`,
+        ancestor_ids: t.ancestor_ids || [],
+        count: r.count,
+      };
+    });
+    if (statusEl) statusEl.textContent = `Cargando… ${Object.keys(newSeen).length} especies (pág. ${page})`;
+    if (results.length < 500) break;
+    page++;
+    await new Promise(r => setTimeout(r, 120));
+  }
+
+  seenCache = newSeen;
+  if (statusEl) statusEl.textContent = `✓ ${Object.keys(seenCache).length} especies sincronizadas`;
+}
+
+// Refresca badges ✓ en las tarjetas visibles sin re-renderizar
+function refreshSeenBadges() {
+  document.querySelectorAll('.sp-card[data-sp-id]').forEach(card => {
+    const id = parseInt(card.dataset.spId);
+    const wrap = card.querySelector('.sp-img-wrap');
+    if (!wrap) return;
+    const existing = wrap.querySelector('.seen-badge');
+    const seen = isSeen(id);
+    card.classList.toggle('seen-card', seen);
+    if (seen && !existing) {
+      const badge = document.createElement('div');
+      badge.className = 'seen-badge'; badge.textContent = '✓';
+      wrap.insertBefore(badge, wrap.querySelector('.map-btn'));
+    } else if (!seen && existing) {
+      existing.remove();
+    }
+  });
 }
 
 // ─── MY SPECIES PAGE ──────────────────────────────────────────
@@ -1775,77 +1984,57 @@ function getGroupForSpecies(sp) {
 }
 
 function showMySpecies() {
-  if (!currentUser) { showLoginPrompt(); return; }
+  if (!currentUser) { showInatLoginPrompt(); return; }
   pushNav('Mis especies', () => renderMySpecies());
 }
 
 function renderMySpecies() {
   const species = Object.values(seenCache).sort((a, b) => a.name.localeCompare(b.name));
   const m = document.getElementById('main');
-  const firstDate = species.length > 0 ? [...species].sort((a,b) => new Date(a.seenAt)-new Date(b.seenAt))[0].seenAt : null;
-  const lastDate  = species.length > 0 ? [...species].sort((a,b) => new Date(b.seenAt)-new Date(a.seenAt))[0].seenAt : null;
 
   m.innerHTML = `
     <div class="level-header">
       <div>
-        <div class="level-rank">Mi registro</div>
-        <div class="level-title">👁 Mis especies</div>
+        <div class="level-rank">Sincronizado desde iNaturalist</div>
+        <div class="level-title">👁 @${currentUser?.login}</div>
       </div>
+      <div class="level-sub">${species.length} especies observadas</div>
     </div>
 
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <div style="font-size:1.4rem">🌿</div>
-      <div style="flex:1;min-width:180px">
-        <div style="font-size:0.82rem;font-weight:500;margin-bottom:4px">Importar desde iNaturalist</div>
-        <div style="font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace">Introduce tu usuario y se marcarán todas tus especies observadas</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="inatUserInput" type="text" placeholder="tu_usuario_inat"
-          style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.8rem;outline:none;width:160px">
-        <button id="inatImportBtn"
-          style="padding:7px 14px;background:var(--accent);color:#0d1117;border:none;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;font-weight:500;white-space:nowrap">
-          Importar
-        </button>
-      </div>
-      <div id="inatImportStatus" style="width:100%;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);display:none"></div>
-    </div>
-
-    <div class="my-species-stats">
-      <div class="ms-stat">
-        <div class="ms-stat-val">${species.length}</div>
-        <div class="ms-stat-key">especies vistas</div>
-      </div>
-      ${firstDate ? `
-      <div class="ms-stat">
-        <div class="ms-stat-val">${new Date(firstDate).toLocaleDateString('es-ES')}</div>
-        <div class="ms-stat-key">primera vista</div>
-      </div>
-      <div class="ms-stat">
-        <div class="ms-stat-val">${new Date(lastDate).toLocaleDateString('es-ES')}</div>
-        <div class="ms-stat-key">última vista</div>
-      </div>` : ''}
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:0.75rem;flex:1">
+        Observaciones verificadas (research grade) de @${currentUser?.login}
+      </span>
+      <button id="resyncBtn" style="padding:6px 14px;background:none;border:1px solid var(--accent);color:var(--accent);border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.73rem;white-space:nowrap">↺ Actualizar</button>
+      <button id="logoutBtn" style="padding:6px 14px;background:none;border:1px solid var(--dim);color:var(--dim);border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.73rem;white-space:nowrap">Cerrar sesión</button>
     </div>
 
     ${species.length === 0
       ? `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.85rem">
            <div style="font-size:3rem;margin-bottom:12px">🔭</div>
-           Aún no has marcado ninguna especie.<br>
-           <span style="color:var(--dim)">Usa el botón ○ en cualquier especie para registrarla.</span>
+           No se encontraron observaciones verificadas para @${currentUser?.login}
          </div>`
-      : `<div id="myGroupsContainer"></div>
-         <div style="text-align:center;margin-top:28px">
-           <button class="clear-all-btn" id="clearAllBtn">🗑 Borrar todo el registro</button>
-         </div>`
+      : `<div id="myGroupsContainer"></div>`
     }
   `;
 
-  document.getElementById('inatImportBtn').addEventListener('click', () => {
-    const username = document.getElementById('inatUserInput').value.trim();
-    if (!username) { alert('Introduce tu nombre de usuario de iNaturalist'); return; }
-    importFromInat(username);
+  document.getElementById('resyncBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('resyncBtn');
+    btn.textContent = '…'; btn.disabled = true;
+    try {
+      await syncInatUser(currentUser.login, null);
+      saveLocal(); updateSeenCounter(); renderMySpecies();
+    } catch(e) {
+      btn.textContent = '✗'; setTimeout(() => { btn.textContent = '↺ Actualizar'; btn.disabled = false; }, 2000);
+    }
   });
-  document.getElementById('inatUserInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('inatImportBtn').click();
+
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    if (confirm(`¿Cerrar sesión de @${currentUser.login}?`)) {
+      currentUser = null; seenCache = {};
+      saveLocal(); updateAuthUI(); updateSeenCounter();
+      navStack.length = 0; history.replaceState({ depth: 0 }, '', ''); repaint();
+    }
   });
 
   if (!species.length) return;
@@ -1869,7 +2058,7 @@ function renderMySpecies() {
     header.innerHTML = `
       <span style="font-size:1.6rem">${group.icon}</span>
       <span style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.2rem;font-weight:700">${group.name}</span>
-      <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:99px">${group.species.length} especies</span>
+      <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:99px">${group.species.length}</span>
       <div style="flex:1;height:1px;background:var(--border)"></div>
     `;
     container.appendChild(header);
@@ -1883,96 +2072,30 @@ function renderMySpecies() {
       const img = sp.photo
         ? `<img class="sp-img" src="${sp.photo}" alt="${sp.name}" loading="lazy">`
         : `<div class="sp-no-img"><span>📷</span><small>sin foto</small></div>`;
-      const date = new Date(sp.seenAt).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
       card.innerHTML = `
         <div class="sp-img-wrap">
           ${img}
-          <button class="seen-btn seen" title="Desmarcar">✓</button>
+          <div class="seen-badge">✓</div>
+          <button class="map-btn" title="Ver distribución">🗺️</button>
         </div>
         <div class="sp-info">
           <div class="sp-sci">${sp.name}</div>
           ${sp.common ? `<div class="sp-common">${sp.common}</div>` : ''}
-          <div class="sp-obs" style="color:var(--accent2)">${date}</div>
+          <div class="sp-obs" style="color:var(--accent2)">${sp.count ? sp.count + ' obs.' : ''}</div>
         </div>
       `;
-      card.querySelector('.seen-btn').addEventListener('click', async e => {
-        e.stopPropagation();
-        await toggleSeen(sp);
-        renderMySpecies();
+      card.querySelector('.map-btn').addEventListener('click', e => {
+        e.stopPropagation(); openMapPopover(sp, e.currentTarget);
       });
       card.addEventListener('click', () => openModal(sp));
       grid.appendChild(card);
     });
     container.appendChild(grid);
   });
-
-  document.getElementById('clearAllBtn').addEventListener('click', async () => {
-    if (confirm('¿Borrar todo el registro de especies vistas?')) {
-      seenCache = {}; updateSeenCounter();
-      try { await setDoc(userDocRef(), { seen: {} }); } catch(e) {}
-      renderMySpecies();
-    }
-  });
-}
-
-// ─── INAT IMPORT ──────────────────────────────────────────────
-async function importFromInat(username) {
-  const btn    = document.getElementById('inatImportBtn');
-  const status = document.getElementById('inatImportStatus');
-  if (!btn || !status) return;
-  btn.disabled = true; btn.textContent = '…';
-  status.style.display = 'block';
-  status.textContent = 'Buscando usuario…';
-  try {
-    const userRes = await fetch(`${API}/users/autocomplete?q=${encodeURIComponent(username)}&per_page=5`);
-    const userData = await userRes.json();
-    const user = (userData.results || []).find(u => u.login.toLowerCase() === username.toLowerCase());
-    if (!user) throw new Error(`Usuario "${username}" no encontrado en iNaturalist`);
-    status.textContent = `✓ Usuario encontrado: ${user.name || user.login}. Cargando observaciones…`;
-    let page = 1, imported = 0;
-    const newEntries = {};
-    while (true) {
-      const url = `${API}/observations/species_counts?user_login=${encodeURIComponent(user.login)}&quality_grade=research&per_page=100&page=${page}&locale=es`;
-      const res = await fetch(url);
-      if (!res.ok) break;
-      const data = await res.json();
-      const results = data.results || [];
-      if (!results.length) break;
-      for (const r of results) {
-        const t = r.taxon;
-        if (!seenCache[t.id]) {
-          newEntries[t.id] = {
-            id: t.id, name: t.name, common: t.preferred_common_name || '',
-            photo: t.default_photo?.medium_url || t.default_photo?.url || null,
-            inatUrl: `https://www.inaturalist.org/taxa/${t.id}`,
-            ancestor_ids: t.ancestor_ids || [],
-            seenAt: new Date().toISOString(), source: 'inat_import',
-          };
-          imported++;
-        }
-      }
-      status.textContent = `Importando… ${Object.keys(seenCache).length + imported} especies (página ${page})`;
-      if (results.length < 100) break;
-      page++;
-      await new Promise(res => setTimeout(res, 150));
-    }
-    if (imported === 0) {
-      status.textContent = '✓ Todo ya estaba importado, nada nuevo que añadir.';
-    } else {
-      Object.assign(seenCache, newEntries);
-      await setDoc(userDocRef(), { seen: seenCache }, { merge: true });
-      updateSeenCounter();
-      status.textContent = `✓ ¡Importadas ${imported} especies nuevas de @${user.login}!`;
-      setTimeout(() => renderMySpecies(), 1500);
-    }
-  } catch(e) {
-    status.textContent = `✗ Error: ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Importar';
-  }
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
+loadLocal();
 document.getElementById('authBtn').addEventListener('click', handleAuth);
 document.getElementById('mySpeciesBtn').addEventListener('click', showMySpecies);
 document.getElementById('logoBtn').addEventListener('click', () => {
@@ -1980,6 +2103,7 @@ document.getElementById('logoBtn').addEventListener('click', () => {
   history.replaceState({ depth: 0 }, '', '');
   repaint();
 });
+updateAuthUI();
 updateSeenCounter();
 renderHome();
 </script>

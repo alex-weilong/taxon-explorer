@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -201,67 +202,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 }
 .kingdom-card:hover .kingdom-arrow { background: var(--accent); color: #0d1117; border-color: var(--accent); }
 
-/* ALL SPECIES BUTTON */
-.all-species-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 8px;
-  border: 1px solid var(--accent); color: var(--accent);
-  background: rgba(126,231,135,0.06);
-  font-family: 'DM Mono', monospace; font-size: 0.72rem;
-  cursor: pointer; transition: all 0.2s; white-space: nowrap;
-  flex-shrink: 0; text-decoration: none;
-}
-.all-species-btn:hover { background: rgba(126,231,135,0.14); transform: translateY(-1px); }
-.all-species-btn .btn-icon { font-size: 0.9rem; }
-
-/* ALL SPECIES OVERLAY */
-.sp-overlay {
-  position: fixed; inset: 0; z-index: 500;
-  background: var(--bg);
-  display: flex; flex-direction: column;
-  opacity: 0; pointer-events: none; transition: opacity 0.22s;
-}
-.sp-overlay.open { opacity: 1; pointer-events: all; }
-.sp-overlay-header {
-  position: sticky; top: 0; z-index: 10;
-  background: rgba(13,17,23,0.97); backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 40px; height: 58px;
-  display: flex; align-items: center; gap: 16px;
-}
-.sp-overlay-title {
-  font-family: 'Playfair Display', serif; font-style: italic;
-  font-size: 1.1rem; font-weight: 700; flex: 1; min-width: 0;
-}
-.sp-overlay-meta {
-  font-family: 'DM Mono', monospace; font-size: 0.65rem;
-  color: var(--muted); flex-shrink: 0;
-}
-.sp-overlay-close {
-  width: 32px; height: 32px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--surface2);
-  color: var(--muted); cursor: pointer; font-size: 1rem;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s; flex-shrink: 0;
-}
-.sp-overlay-close:hover { border-color: var(--accent3); color: var(--accent3); }
-.sp-overlay-body { flex: 1; overflow-y: auto; padding: 28px 40px 60px; }
-.sp-overlay-loading {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; height: 300px; gap: 14px;
-  font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--muted);
-}
-.sp-overlay-progress {
-  font-family: 'DM Mono', monospace; font-size: 0.7rem;
-  color: var(--dim); margin-top: 4px;
-}
-
-@media (max-width: 768px) {
-  .sp-overlay-header { padding: 0 16px; height: 52px; }
-  .sp-overlay-body { padding: 16px 16px 60px; }
-  .all-species-btn span.btn-label { display: none; }
-}
-
+/* LOADING */
 .loading { text-align: center; padding: 100px 20px; }
 .spinner { width: 42px; height: 42px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -734,71 +675,157 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
+
+  /* ── Header ── */
   header { padding: 0 12px; }
-  .header-inner { height: 54px; gap: 8px; }
+  .header-inner { height: 54px; gap: 6px; }
   .logo { font-size: 1rem; }
   .src-badge { display: none; }
-  .search-wrap { max-width: none; flex: 1; }
-  .search-input { font-size: 16px; }
+  /* Hide "by @..." credits on mobile */
+  .header-inner > span:last-child { display: none; }
+  /* Shrink auth button to icon only */
+  .auth-btn { padding: 5px 8px; }
+  .auth-label { display: none; }
+  /* Shrink my-species btn */
+  .my-species-btn { padding: 5px 8px; gap: 4px; }
+
+  /* ── Filter bar ── */
+  .filter-bar { padding: 0 12px; top: 54px; }
+  .filter-inner { height: 48px; gap: 6px; }
+  .filter-label { display: none; }
+  .filter-divider { display: none; }
+  .search-wrap { flex: 1; max-width: none; }
+  .search-input { font-size: 16px; padding: 6px 26px 6px 28px; }
+  .place-wrap { flex: 1; max-width: none; overflow: visible; }
   .place-input { font-size: 16px; }
+
+  /* Dropdowns: full-width fixed below both bars (54+48=102px) */
   .search-dropdown {
-    position: fixed; top: 106px; left: 0; right: 0;
-    border-radius: 0 0 12px 12px; max-height: 60vh; overflow-y: auto; z-index: 500;
-    min-width: unset;
+    position: fixed; top: 102px; left: 0; right: 0;
+    border-radius: 0 0 14px 14px; max-height: 58vh;
+    overflow-y: auto; z-index: 500; min-width: unset;
   }
-  .search-result { padding: 12px 16px; gap: 14px; }
-  .sr-photo, .sr-no-photo { width: 48px; height: 48px; border-radius: 8px; }
-  .sr-name { font-size: 1rem; }
-  .sr-common { font-size: 0.8rem; }
-  .breadcrumb { font-size: 0.72rem; gap: 2px; }
-  .crumb { padding: 2px 5px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
-  main { padding: 20px 16px 80px; }
-  .level-header { margin-bottom: 20px; gap: 8px; }
-  .level-title { font-size: 1.6rem; }
-  .level-sub { font-size: 0.75rem; width: 100%; margin-left: 0; }
-  .card-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .place-dropdown {
+    position: fixed; left: 0; right: 0; top: 102px;
+    border-radius: 0 0 14px 14px; max-height: 72vh;
+    overflow-y: auto; z-index: 300;
+  }
+  .search-result { padding: 12px 16px; gap: 12px; }
+  .sr-photo, .sr-no-photo { width: 44px; height: 44px; border-radius: 8px; }
+  .sr-name { font-size: 0.95rem; }
+  .sr-common { font-size: 0.78rem; }
+  .place-result { padding: 12px 16px; font-size: 0.88rem; }
+  .place-preview { height: 200px; }
+  #placePreviewMap { height: 200px; }
+
+  /* ── Breadcrumb ── */
+  .breadcrumb { font-size: 0.7rem; gap: 2px; flex: 1; min-width: 0; }
+  .crumb { padding: 2px 4px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── Main content ── */
+  main { padding: 16px 12px 80px; }
+
+  /* ── Level header ── */
+  .level-header {
+    margin-bottom: 16px; gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+  .level-header > div:first-child { grid-column: 1; grid-row: 1; }
+  .level-header .all-species-btn { grid-column: 2; grid-row: 1; align-self: center; }
+  .level-header .level-sub { grid-column: 1 / -1; grid-row: 2; margin-left: 0; font-size: 0.72rem; }
+  .level-title { font-size: 1.45rem; }
+
+  /* Hide "Ver todas las especies" text label, keep icon */
+  .all-species-btn .btn-label { display: none; }
+  .all-species-btn { padding: 6px 10px; }
+
+  /* ── Taxon card grid ── */
+  .card-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .taxon-card { border-radius: 10px; }
-  .tc-body { padding: 10px 12px 12px; }
-  .tc-name { font-size: 0.92rem; }
-  .tc-common { font-size: 0.68rem; }
-  .kingdom-grid { gap: 8px; }
-  .kingdom-card { min-width: 140px; }
-  .kingdom-icon-wrap { width: 56px; height: 56px; font-size: 1.7rem; }
-  .kingdom-img-wrap { width: 56px; height: 56px; }
-  .kingdom-body { padding: 10px 12px; }
-  .kingdom-name { font-size: 0.9rem; }
+  .tc-img-wrap { aspect-ratio: 4/3; }
+  .tc-body { padding: 8px 10px 10px; gap: 3px; }
+  .tc-name { font-size: 0.88rem; }
+  .tc-common { font-size: 0.66rem; }
+  .tc-arrow { width: 22px; height: 22px; font-size: 0.78rem; top: 7px; right: 7px; }
+
+  /* ── Kingdom row ── */
+  .kingdom-grid { gap: 7px; }
+  .kingdom-card { min-width: 130px; border-radius: 12px; }
+  .kingdom-icon-wrap { width: 52px; height: 52px; font-size: 1.6rem; }
+  .kingdom-img-wrap { width: 52px; height: 52px; }
+  .kingdom-body { padding: 9px 10px; gap: 2px; }
+  .kingdom-name { font-size: 0.88rem; }
   .kingdom-common { display: none; }
   .kingdom-hint { display: none; }
   .kingdom-arrow { display: none; }
-  .species-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sp-info { padding: 8px 10px; }
+
+  /* ── Species grid ── */
+  .species-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sp-info { padding: 7px 9px 9px; }
+  .sp-sci { font-size: 0.8rem; }
+  .sp-common { font-size: 0.68rem; }
+  .sp-obs { font-size: 0.6rem; }
+
+  /* Map/phenology buttons: bigger touch targets */
+  .map-btn { width: 34px; height: 34px; bottom: 6px; left: 6px; font-size: 0.9rem; }
+  .phenology-btn { width: 34px; height: 34px; bottom: 6px; left: 48px; font-size: 0.9rem; }
+
+  /* ── Popovers: full-width sheet at bottom on mobile ── */
+  .map-popover, .phenology-popover {
+    position: fixed !important;
+    left: 8px !important; right: 8px !important;
+    bottom: 12px !important; top: auto !important;
+    width: auto !important;
+    border-radius: 16px;
+    transform: none !important;
+    max-height: 70vh; overflow-y: auto;
+  }
+  .map-popover.visible, .phenology-popover.visible {
+    transform: none !important;
+  }
+  .map-popover-map { width: 100% !important; height: 220px; }
+
+  /* ── Modal: bottom sheet ── */
   .modal-overlay { padding: 0; align-items: flex-end; }
-  .modal { max-width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; border-bottom: none; transform: translateY(20px); }
+  .modal {
+    max-width: 100%; max-height: 94vh;
+    border-radius: 20px 20px 0 0; border-bottom: none;
+    transform: translateY(24px);
+  }
   .modal-overlay.open .modal { transform: translateY(0); }
   .modal-handle { display: block; }
-  .modal-body { padding: 20px 16px 32px; }
-  .modal-sci { font-size: 1.4rem; }
-  .modal-close { top: 12px; right: 12px; }
-  #speciesMap, .map-loading { height: 220px; }
-  .filter-bar { padding: 0 12px; top: 54px; }
-  .filter-inner { height: 52px; gap: 6px; }
-  .filter-label { display: none; }
-  .filter-divider { display: none; }
-  .place-wrap { max-width: none; flex: 1; overflow: visible; }
-  .place-dropdown { position: fixed; left: 0; right: 0; top: 106px; border-radius: 0 0 12px 12px; max-height: 75vh; overflow-y: auto; z-index: 300; }
-  .place-result { padding: 12px 16px; font-size: 0.9rem; }
-  .place-preview { height: 220px; }
-  #placePreviewMap { height: 220px; }
-  .loading { padding: 60px 20px; }
+  .modal-body { padding: 18px 14px 36px; }
+  .modal-sci { font-size: 1.3rem; line-height: 1.2; }
+  .modal-common { font-size: 0.85rem; margin-bottom: 14px; }
+  .modal-stats { padding: 12px; gap: 16px; margin-bottom: 14px; }
+  .ms-val { font-size: 1.1rem; }
+  .modal-links { gap: 8px; }
+  .modal-link { padding: 8px 12px; font-size: 0.74rem; }
+  .modal-close { top: 10px; right: 10px; width: 30px; height: 30px; font-size: 0.9rem; }
+  #speciesMap, .map-loading { height: 200px; }
+  .map-section { margin-top: 18px; }
+
+  /* ── All species overlay ── */
+  .sp-overlay-header { padding: 0 14px; height: 52px; gap: 10px; }
+  .sp-overlay-title { font-size: 1rem; }
+  .sp-overlay-meta { font-size: 0.6rem; }
+  .sp-overlay-body { padding: 12px 12px 60px; }
+
+  /* ── Loading ── */
+  .loading { padding: 50px 16px; }
 }
 
 @media (max-width: 380px) {
-  .card-grid { grid-template-columns: 1fr; }
-  .species-grid { grid-template-columns: 1fr 1fr; }
-  .kingdom-card { min-width: 120px; }
-  .kingdom-icon-wrap { width: 48px; height: 48px; font-size: 1.4rem; }
-  .kingdom-img-wrap { width: 48px; height: 48px; }
-  .kingdom-name { font-size: 0.82rem; }
+  .card-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .species-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .kingdom-card { min-width: 110px; }
+  .kingdom-icon-wrap { width: 46px; height: 46px; font-size: 1.35rem; }
+  .kingdom-img-wrap { width: 46px; height: 46px; }
+  .kingdom-name { font-size: 0.8rem; }
+  .header-inner { gap: 4px; }
 }
 </style>
 </head>
@@ -823,14 +850,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 <div class="filter-bar">
   <div class="filter-inner">
-    <div class="search-wrap" id="searchWrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="searchInput" type="text" placeholder="Buscar taxón…"
-        autocomplete="off" spellcheck="false" dir="ltr">
-      <button class="search-clear" id="searchClear">✕</button>
-      <div class="search-dropdown" id="searchDropdown"></div>
-    </div>
-    <div class="filter-divider"></div>
     <span class="filter-label">📍 Zona</span>
     <div class="place-wrap" id="placeWrap">
       <span class="place-icon">🌍</span>
@@ -842,6 +861,14 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
     <div class="active-place" id="activePlace">
       <span id="activePlaceName"></span>
       <button id="activePlaceClear" title="Quitar filtro">✕</button>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="search-wrap" id="searchWrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Buscar taxón…"
+        autocomplete="off" spellcheck="false" dir="ltr">
+      <button class="search-clear" id="searchClear">✕</button>
+      <div class="search-dropdown" id="searchDropdown"></div>
     </div>
   </div>
 </div>
@@ -878,25 +905,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
     <div class="modal-handle"></div>
     <button class="modal-close" id="modalClose">✕</button>
     <div id="modalContent"></div>
-  </div>
-</div>
-
-<!-- ALL SPECIES OVERLAY -->
-<div class="sp-overlay" id="spOverlay">
-  <div class="sp-overlay-header">
-    <div>
-      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px" id="spOverlayRank"></div>
-      <div class="sp-overlay-title" id="spOverlayTitle"></div>
-    </div>
-    <div class="sp-overlay-meta" id="spOverlayMeta"></div>
-    <button class="sp-overlay-close" id="spOverlayClose">✕</button>
-  </div>
-  <div class="sp-overlay-body" id="spOverlayBody">
-    <div class="sp-overlay-loading" id="spOverlayLoading">
-      <div class="spinner"></div>
-      <div>Cargando todas las especies…</div>
-      <div class="sp-overlay-progress" id="spOverlayProgress"></div>
-    </div>
   </div>
 </div>
 
@@ -1237,18 +1245,10 @@ function showChildrenLevel(parent, children, childRank) {
         <div class="level-rank">${parentRankEs}</div>
         <div class="level-title">${parent.name}</div>
       </div>
-      <button class="all-species-btn" id="allSpeciesBtn">
-        <span class="btn-icon">🌿</span>
-        <span class="btn-label">Ver todas las especies</span>
-      </button>
       <div class="level-sub">${sorted.length} ${childRankEs}s</div>
     </div>
     <div class="card-grid" id="grid"></div>
   `;
-
-  document.getElementById('allSpeciesBtn').addEventListener('click', () => {
-    openAllSpeciesOverlay(parent.id, parent.name, parent.rank);
-  });
 
   renderCardGrid(sorted, childRankEs, child => {
     enterTaxon(child.id, child.name, childRank);
@@ -1317,6 +1317,9 @@ const popoverBody   = document.getElementById('mapPopoverBody');
 const popoverFooter = document.getElementById('mapPopoverFooter');
 
 function positionPopover(triggerEl) {
+  // On mobile: always show as bottom sheet (CSS handles position via !important)
+  if (window.innerWidth <= 768) return;
+
   const rect = triggerEl.getBoundingClientRect();
   const pw = 300, ph = 260;
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -1412,12 +1415,9 @@ async function openMapPopover(sp, triggerEl) {
   }).addTo(popoverMap);
 
   popoverFooter.textContent = 'iNaturalist · todas las observaciones';
-
-  // Auto-fit to where observations actually are
   setTimeout(() => {
     popoverMap?.invalidateSize();
-    fitMapToBbox(popoverMap, sp.id);
-  }, 30);
+  }, window.innerWidth <= 768 ? 150 : 30);
 }
 
 function closeMapPopover() {
@@ -1447,6 +1447,9 @@ const MONTHS = ['E','F','M','A','M','J','J','A','S','O','N','D'];
 const MONTH_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 function positionPhenologyPopover(triggerEl) {
+  // On mobile: CSS handles it as a bottom sheet
+  if (window.innerWidth <= 768) return;
+
   const rect = triggerEl.getBoundingClientRect();
   const pw = 320, ph = 180;
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -1764,7 +1767,6 @@ async function loadMap(sp) {
     const mapEl = document.getElementById('speciesMap');
     mapEl.style.display = 'block';
 
-    // Start with world view; we'll fit bounds once we have them
     const map = L.map('speciesMap', { zoom: 2, center: [20, 0], zoomControl: true, attributionControl: false });
     currentMap = map;
 
@@ -1779,15 +1781,18 @@ async function loadMap(sp) {
       { maxZoom: 19, opacity: 0.85 }
     ).addTo(map);
 
-    // 3. GBIF tile
+    // 3. GBIF tile — resolve key then add layer
     const noteEl = document.getElementById('mapNote');
     noteEl.textContent = 'iNaturalist · todas las observaciones';
+
     getGbifKey(sp.name).then(gbifKey => {
       if (!gbifKey || !currentMap) return;
       L.tileLayer(
         `https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?taxonKey=${gbifKey}&style=classic.point`,
         { maxZoom: 19, opacity: 0.5 }
       ).addTo(map);
+
+      // Layer toggle controls
       noteEl.innerHTML = `
         <span style="display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span style="color:#2d9e45;font-weight:600">● iNaturalist</span>
@@ -1801,36 +1806,9 @@ async function loadMap(sp) {
       subdomains: 'abcd', maxZoom: 19, opacity: 0.8
     }).addTo(map);
 
-    // 5. Auto-fit: fetch bbox from iNat (fast, single call, no full obs list needed)
-    fitMapToBbox(map, sp.id);
-
   } catch(e) {
     document.getElementById('mapLoading').innerHTML = '<span style="color:var(--dim)">No se pudo cargar el mapa</span>';
   }
-}
-
-// Fetch bbox of a taxon's observations and fit map to it.
-// Cached per taxon so popover + modal don't double-fetch.
-const bboxCache = {};
-async function fitMapToBbox(map, taxonId) {
-  try {
-    if (!bboxCache[taxonId]) {
-      const url = `${API}/observations?taxon_id=${taxonId}&quality_grade=research&captive=false&geo=true&per_page=50&order_by=id&locale=es`;
-      bboxCache[taxonId] = fetch(url)
-        .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          const obs = (d?.results || []).filter(o => o.geojson);
-          if (!obs.length) return null;
-          const lats = obs.map(o => o.geojson.coordinates[1]);
-          const lngs = obs.map(o => o.geojson.coordinates[0]);
-          return [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]];
-        }).catch(() => null);
-    }
-    const bounds = await bboxCache[taxonId];
-    if (bounds && map) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
-    }
-  } catch(e) { /* stay at world view */ }
 }
 
 document.getElementById('modalClose').addEventListener('click', closeModal);
@@ -2529,267 +2507,6 @@ function renderMySpecies() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
-// ─── ALL SPECIES OVERLAY ───────────────────────────────────────
-// Page-by-page loading (100/page), grouped by genus/family.
-
-const spOverlay      = document.getElementById('spOverlay');
-const spOverlayBody  = document.getElementById('spOverlayBody');
-const spOverlayTitle = document.getElementById('spOverlayTitle');
-const spOverlayRank  = document.getElementById('spOverlayRank');
-const spOverlayMeta  = document.getElementById('spOverlayMeta');
-
-const SP_PAGE_SIZE = 100;
-
-// Overlay state
-let spState = {
-  taxonId: null, taxonName: '', taxonRank: '',
-  page: 1, total: null, loaded: [], done: false, loading: false,
-};
-
-// ── CSS for grouping headers (injected once) ──────────────────
-(function injectSpGroupCss() {
-  const s = document.createElement('style');
-  s.textContent = `
-    .sp-group-header {
-      grid-column: 1 / -1;
-      display: flex; align-items: center; gap: 10px;
-      padding: 6px 0 2px; margin-top: 10px;
-    }
-    .sp-group-header:first-child { margin-top: 0; }
-    .sp-group-name {
-      font-family: 'Playfair Display', serif; font-style: italic;
-      font-size: 1rem; font-weight: 700; color: var(--text);
-    }
-    .sp-group-rank {
-      font-family: 'DM Mono', monospace; font-size: 0.58rem;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--dim); border: 1px solid var(--dim);
-      padding: 2px 6px; border-radius: 4px;
-    }
-    .sp-group-line { flex: 1; height: 1px; background: var(--border); }
-    .sp-group-count { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); }
-    .sp-load-more-wrap {
-      grid-column: 1 / -1; text-align: center; padding: 24px 0 8px;
-    }
-    .sp-load-more-btn {
-      padding: 10px 28px; border-radius: 8px;
-      border: 1px solid var(--accent); color: var(--accent);
-      background: rgba(126,231,135,0.06);
-      font-family: 'DM Mono', monospace; font-size: 0.78rem;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .sp-load-more-btn:hover { background: rgba(126,231,135,0.14); }
-    .sp-load-more-btn:disabled { opacity: 0.5; cursor: default; }
-    .sp-load-done {
-      grid-column: 1 / -1; text-align: center; padding: 20px 0;
-      font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--dim);
-    }
-  `;
-  document.head.appendChild(s);
-})();
-
-// ── Open overlay ──────────────────────────────────────────────
-function openAllSpeciesOverlay(taxonId, taxonName, taxonRank) {
-  spState = {
-    taxonId, taxonName, taxonRank,
-    page: 1, total: null, loaded: [], done: false, loading: false,
-  };
-
-  spOverlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  spOverlayTitle.textContent = taxonName;
-  spOverlayRank.textContent  = RANK_ES[taxonRank] || taxonRank;
-  spOverlayMeta.textContent  = activePlaceName ? `📍 ${activePlaceName}` : '';
-
-  spOverlayBody.innerHTML = `
-    <div class="sp-overlay-loading" id="spInitLoading">
-      <div class="spinner"></div>
-      <div>Cargando especies…</div>
-    </div>`;
-
-  spLoadNextPage();
-}
-
-// ── Close overlay ─────────────────────────────────────────────
-function closeAllSpeciesOverlay() {
-  spState.loading = false;  // signal abort
-  spOverlay.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-document.getElementById('spOverlayClose').addEventListener('click', closeAllSpeciesOverlay);
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && spOverlay.classList.contains('open')) closeAllSpeciesOverlay();
-});
-
-// ── Load one page ─────────────────────────────────────────────
-async function spLoadNextPage() {
-  if (spState.loading || spState.done) return;
-  spState.loading = true;
-
-  let results = [];
-  try {
-    if (activePlaceId) {
-      const url = `${API}/observations/species_counts?taxon_id=${spState.taxonId}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=${SP_PAGE_SIZE}&page=${spState.page}&order_by=count&locale=es`;
-      const r = await fetch(url);
-      const d = await r.json();
-      if (spState.page === 1) spState.total = d.total_results || null;
-      results = (d.results || []).map(r => ({
-        id: r.taxon.id, name: r.taxon.name,
-        common: r.taxon.preferred_common_name || '',
-        photo: r.taxon.default_photo?.medium_url || r.taxon.default_photo?.url || null,
-        observations: r.count || 0,
-        inatUrl: `https://www.inaturalist.org/taxa/${r.taxon.id}`,
-        wikipedia: r.taxon.wikipedia_url || null,
-        ancestor_ids: r.taxon.ancestor_ids || [],
-        genus: r.taxon.name.split(' ')[0],
-      }));
-    } else {
-      const url = `${API}/taxa?taxon_id=${spState.taxonId}&rank=species&per_page=${SP_PAGE_SIZE}&page=${spState.page}&order_by=observations_count&locale=es`;
-      const r = await fetch(url);
-      const d = await r.json();
-      if (spState.page === 1) spState.total = d.total_results || null;
-      results = (d.results || []).map(t => ({
-        ...spToObj(t),
-        genus: t.name.split(' ')[0],
-        family: t.ancestors?.find(a => a.rank === 'family')?.name || '',
-      }));
-    }
-  } catch(e) {
-    spState.loading = false;
-    spRenderError();
-    return;
-  }
-
-  if (!spOverlay.classList.contains('open')) return; // closed while loading
-
-  spState.loaded = spState.loaded.concat(results);
-  spState.done = results.length < SP_PAGE_SIZE || spState.loaded.length >= (spState.total || Infinity);
-  spState.page++;
-  spState.loading = false;
-
-  spRenderPage(results, spState.page === 2); // first render = build grid from scratch
-}
-
-// ── Render results into the overlay ──────────────────────────
-function spRenderPage(newResults, isFirst) {
-  const totalLoaded = spState.loaded.length;
-  const totalStr    = spState.total ? ` de ${spState.total.toLocaleString()}` : '';
-  const regionStr   = activePlaceName ? ` · 📍 ${activePlaceName}` : '';
-  spOverlayMeta.textContent = `${totalLoaded.toLocaleString()}${totalStr} especies${regionStr}`;
-
-  if (isFirst) {
-    if (!newResults.length) {
-      spOverlayBody.innerHTML = `<div class="sp-overlay-loading" style="color:var(--muted)">No se encontraron especies</div>`;
-      return;
-    }
-    spOverlayBody.innerHTML = `<div class="species-grid" id="spGrid"></div>`;
-  }
-
-  const grid = document.getElementById('spGrid');
-  if (!grid) return;
-
-  // Remove previous "load more" / "done" footer
-  grid.querySelectorAll('.sp-load-more-wrap, .sp-load-done').forEach(el => el.remove());
-
-  // Group new results by genus (first word of species name)
-  const grouped = [];
-  let lastGenus = null;
-  // Sort new batch alphabetically
-  const sorted = [...newResults].sort((a, b) => a.name.localeCompare(b.name));
-
-  sorted.forEach(sp => {
-    const genus = sp.name.split(' ')[0];
-    if (genus !== lastGenus) {
-      grouped.push({ type: 'header', genus });
-      lastGenus = genus;
-    }
-    grouped.push({ type: 'species', sp });
-  });
-
-  // How many species per genus in this batch (for the count badge)
-  const genusCounts = {};
-  sorted.forEach(sp => {
-    const g = sp.name.split(' ')[0];
-    genusCounts[g] = (genusCounts[g] || 0) + 1;
-  });
-
-  grouped.forEach(item => {
-    if (item.type === 'header') {
-      const h = document.createElement('div');
-      h.className = 'sp-group-header';
-      h.innerHTML = `
-        <span class="sp-group-rank">Género</span>
-        <span class="sp-group-name">${item.genus}</span>
-        <span class="sp-group-count">${genusCounts[item.genus]} sp.</span>
-        <div class="sp-group-line"></div>`;
-      grid.appendChild(h);
-    } else {
-      grid.appendChild(spMakeCard(item.sp));
-    }
-  });
-
-  // Footer: load more or done
-  if (!spState.done) {
-    const wrap = document.createElement('div');
-    wrap.className = 'sp-load-more-wrap';
-    wrap.innerHTML = `<button class="sp-load-more-btn" id="spLoadMoreBtn">
-      Cargar más especies ${spState.total ? `(${(spState.total - totalLoaded).toLocaleString()} restantes)` : ''}
-    </button>`;
-    grid.appendChild(wrap);
-    document.getElementById('spLoadMoreBtn').addEventListener('click', () => {
-      document.getElementById('spLoadMoreBtn').disabled = true;
-      document.getElementById('spLoadMoreBtn').textContent = 'Cargando…';
-      spLoadNextPage();
-    });
-  } else {
-    const done = document.createElement('div');
-    done.className = 'sp-load-done';
-    done.textContent = `✓ ${totalLoaded.toLocaleString()} especies mostradas`;
-    grid.appendChild(done);
-  }
-}
-
-function spRenderError() {
-  spOverlayBody.innerHTML = `<div class="sp-overlay-loading" style="color:var(--accent3)">
-    Error al cargar. <button class="retry-btn" onclick="spLoadNextPage()">↺ Reintentar</button>
-  </div>`;
-}
-
-// ── Build a species card (same as main view) ──────────────────
-function spMakeCard(sp) {
-  const card = document.createElement('div');
-  card.className = 'sp-card' + (isSeen(sp.id) ? ' seen-card' : '');
-  card.dataset.spId = sp.id;
-  const img = sp.photo
-    ? `<img class="sp-img" src="${sp.photo}" alt="${sp.name}" loading="lazy"
-         onerror="this.parentElement.innerHTML='<div class=\\'sp-no-img\\'><span>📷</span><small>sin foto</small></div>'">`
-    : `<div class="sp-no-img"><span>📷</span><small>sin foto</small></div>`;
-  card.innerHTML = `
-    <div class="sp-img-wrap">
-      ${img}
-      ${isSeen(sp.id) ? '<div class="seen-badge">✓</div>' : ''}
-      <button class="map-btn" title="Ver distribución">🗺️</button>
-      <button class="phenology-btn" title="Ver fenología">📅</button>
-    </div>
-    <div class="sp-info">
-      <div class="sp-sci">${sp.name}</div>
-      ${sp.common ? `<div class="sp-common">${sp.common}</div>` : ''}
-      <div class="sp-obs">${formatCount(sp.observations)} obs.</div>
-    </div>`;
-  card.querySelector('.map-btn').addEventListener('click', e => {
-    e.stopPropagation(); openMapPopover(sp, e.currentTarget);
-  });
-  card.querySelector('.phenology-btn').addEventListener('click', e => {
-    e.stopPropagation(); openPhenologyPopover(sp, e.currentTarget);
-  });
-  card.addEventListener('click', () => openModal(sp));
-  return card;
-}
-
-
-
 loadLocal();
 document.getElementById('authBtn').addEventListener('click', handleAuth);
 document.getElementById('mySpeciesBtn').addEventListener('click', showMySpecies);

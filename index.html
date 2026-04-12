@@ -2640,7 +2640,6 @@ const spOverlayBody  = document.getElementById('spOverlayBody');
 const spOverlayTitle = document.getElementById('spOverlayTitle');
 const spOverlayRank  = document.getElementById('spOverlayRank');
 const spOverlayMeta  = document.getElementById('spOverlayMeta');
-const SP_PAGE_SIZE   = 100;
 
 let spState = { taxonId:null, taxonName:'', taxonRank:'', page:1, total:null, loaded:[], done:false, loading:false };
 
@@ -2685,36 +2684,48 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && spOverlay.classList.contains('open')) closeAllSpeciesOverlay();
 });
 
+const SP_PAGE_SIZE = 200;
+
 async function spLoadNextPage() {
   if (spState.loading || spState.done) return;
   spState.loading = true;
   let results = [];
   try {
+    // Use species_counts for both global and place-filtered:
+    // this endpoint traverses the full taxonomic tree and returns
+    // all observed species regardless of intermediate ranks.
+    let url;
     if (activePlaceId) {
-      const url = `${API}/observations/species_counts?taxon_id=${spState.taxonId}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=${SP_PAGE_SIZE}&page=${spState.page}&order_by=count&locale=es`;
-      const r = await fetch(url); const d = await r.json();
-      if (spState.page === 1) spState.total = d.total_results || null;
-      results = (d.results || []).map(r => ({
-        id:r.taxon.id, name:r.taxon.name, common:r.taxon.preferred_common_name||'',
-        photo:r.taxon.default_photo?.medium_url||r.taxon.default_photo?.url||null,
-        observations:r.count||0, inatUrl:`https://www.inaturalist.org/taxa/${r.taxon.id}`,
-        wikipedia:r.taxon.wikipedia_url||null, ancestor_ids:r.taxon.ancestor_ids||[],
-      }));
+      url = `${API}/observations/species_counts?taxon_id=${spState.taxonId}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=${SP_PAGE_SIZE}&page=${spState.page}&locale=es`;
     } else {
-      const url = `${API}/taxa?taxon_id=${spState.taxonId}&rank=species&per_page=${SP_PAGE_SIZE}&page=${spState.page}&order_by=observations_count&locale=es`;
-      const r = await fetch(url); const d = await r.json();
-      if (spState.page === 1) spState.total = d.total_results || null;
-      results = (d.results || []).map(spToObj);
+      url = `${API}/observations/species_counts?taxon_id=${spState.taxonId}&verifiable=true&captive=false&per_page=${SP_PAGE_SIZE}&page=${spState.page}&locale=es`;
     }
+    const r = await fetch(url);
+    const d = await r.json();
+    if (spState.page === 1) spState.total = d.total_results || null;
+    results = (d.results || []).map(row => ({
+      id:           row.taxon.id,
+      name:         row.taxon.name,
+      common:       row.taxon.preferred_common_name || '',
+      photo:        row.taxon.default_photo?.medium_url || row.taxon.default_photo?.url || null,
+      observations: row.count || 0,
+      inatUrl:      `https://www.inaturalist.org/taxa/${row.taxon.id}`,
+      wikipedia:    row.taxon.wikipedia_url || null,
+      ancestor_ids: row.taxon.ancestor_ids || [],
+    }));
   } catch(e) {
     spState.loading = false;
-    spOverlayBody.innerHTML = `<div class="sp-overlay-loading" style="color:var(--accent3)">Error al cargar. <button class="retry-btn" onclick="spLoadNextPage()">↺ Reintentar</button></div>`;
+    spOverlayBody.innerHTML = `<div class="sp-overlay-loading" style="color:var(--accent3)">
+      Error al cargar. <button class="retry-btn" onclick="spLoadNextPage()">↺ Reintentar</button>
+    </div>`;
     return;
   }
 
   if (!spOverlay.classList.contains('open')) return;
+
   spState.loaded = spState.loaded.concat(results);
-  spState.done   = results.length < SP_PAGE_SIZE || spState.loaded.length >= (spState.total || Infinity);
+  spState.done   = results.length === 0 ||
+    (spState.total !== null && spState.loaded.length >= spState.total);
   spState.page++;
   spState.loading = false;
   spRenderPage(results, spState.page === 2);

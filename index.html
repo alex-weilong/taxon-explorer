@@ -2641,7 +2641,11 @@ const spOverlayTitle = document.getElementById('spOverlayTitle');
 const spOverlayRank  = document.getElementById('spOverlayRank');
 const spOverlayMeta  = document.getElementById('spOverlayMeta');
 
-let spState = { taxonId:null, taxonName:'', taxonRank:'', page:1, total:null, loaded:[], done:false, loading:false };
+let spState = {
+  taxonId:null, taxonName:'', taxonRank:'',
+  page:1, total:null, loaded:[], done:false, loading:false,
+  buffer:[]   // species from the last incomplete genus, held until next page arrives
+};
 
 // Inject grouping CSS once
 (function(){
@@ -2663,7 +2667,7 @@ let spState = { taxonId:null, taxonName:'', taxonRank:'', page:1, total:null, lo
 })();
 
 function openAllSpeciesOverlay(taxonId, taxonName, taxonRank) {
-  spState = { taxonId, taxonName, taxonRank, page:1, total:null, loaded:[], done:false, loading:false };
+  spState = { taxonId, taxonName, taxonRank, page:1, total:null, loaded:[], done:false, loading:false, buffer:[] };
   spOverlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   spOverlayTitle.textContent = taxonName;
@@ -2738,7 +2742,10 @@ function spRenderPage(newResults, isFirst) {
   spOverlayMeta.textContent = `${totalLoaded.toLocaleString()}${totalStr} especies${regionStr}`;
 
   if (isFirst) {
-    if (!newResults.length) { spOverlayBody.innerHTML = `<div class="sp-overlay-loading" style="color:var(--muted)">No se encontraron especies</div>`; return; }
+    if (!newResults.length) {
+      spOverlayBody.innerHTML = `<div class="sp-overlay-loading" style="color:var(--muted)">No se encontraron especies</div>`;
+      return;
+    }
     spOverlayBody.innerHTML = `<div class="species-grid" id="spGrid"></div>`;
   }
 
@@ -2746,27 +2753,73 @@ function spRenderPage(newResults, isFirst) {
   if (!grid) return;
   grid.querySelectorAll('.sp-load-more-wrap, .sp-load-done').forEach(el => el.remove());
 
-  const sorted = [...newResults].sort((a,b) => a.name.localeCompare(b.name));
-  const genusCounts = {};
-  sorted.forEach(sp => { const g = sp.name.split(' ')[0]; genusCounts[g] = (genusCounts[g]||0)+1; });
+  // Combine buffered species from previous page with new results
+  const allNew = [...spState.buffer, ...newResults].sort((a,b) => a.name.localeCompare(b.name));
+  spState.buffer = [];
 
-  let lastGenus = null;
-  sorted.forEach(sp => {
-    const genus = sp.name.split(' ')[0];
-    if (genus !== lastGenus) {
-      const h = document.createElement('div');
-      h.className = 'sp-group-header';
-      h.innerHTML = `<span class="sp-group-rank">Género</span><span class="sp-group-name">${genus}</span><span class="sp-group-count">${genusCounts[genus]} sp.</span><div class="sp-group-line"></div>`;
-      grid.appendChild(h);
-      lastGenus = genus;
-    }
-    grid.appendChild(spMakeCard(sp));
+  if (!allNew.length) {
+    spAppendFooter(grid, totalLoaded);
+    return;
+  }
+
+  // Group by genus
+  const byGenus = {};
+  allNew.forEach(sp => {
+    const g = sp.name.split(' ')[0];
+    if (!byGenus[g]) byGenus[g] = [];
+    byGenus[g].push(sp);
   });
 
+  const genera = Object.keys(byGenus).sort();
+
+  // If this isn't the last page, hold the final genus in the buffer
+  // (it might be incomplete — more species of that genus may come in the next page)
+  if (!spState.done) {
+    const lastGenus = genera[genera.length - 1];
+    spState.buffer = byGenus[lastGenus];
+    genera.pop();
+  }
+
+  // Render complete genera
+  genera.forEach(genus => {
+    const spp = byGenus[genus];
+    const h = document.createElement('div');
+    h.className = 'sp-group-header';
+    h.innerHTML = `
+      <span class="sp-group-rank">Género</span>
+      <span class="sp-group-name">${genus}</span>
+      <span class="sp-group-count">${spp.length} sp.</span>
+      <div class="sp-group-line"></div>`;
+    grid.appendChild(h);
+    spp.forEach(sp => grid.appendChild(spMakeCard(sp)));
+  });
+
+  // If done, flush the buffer too
+  if (spState.done && spState.buffer.length) {
+    const genus = spState.buffer[0].name.split(' ')[0];
+    const h = document.createElement('div');
+    h.className = 'sp-group-header';
+    h.innerHTML = `
+      <span class="sp-group-rank">Género</span>
+      <span class="sp-group-name">${genus}</span>
+      <span class="sp-group-count">${spState.buffer.length} sp.</span>
+      <div class="sp-group-line"></div>`;
+    grid.appendChild(h);
+    spState.buffer.forEach(sp => grid.appendChild(spMakeCard(sp)));
+    spState.buffer = [];
+  }
+
+  spAppendFooter(grid, totalLoaded);
+}
+
+function spAppendFooter(grid, totalLoaded) {
   if (!spState.done) {
     const wrap = document.createElement('div');
     wrap.className = 'sp-load-more-wrap';
-    wrap.innerHTML = `<button class="sp-load-more-btn" id="spLoadMoreBtn">Cargar más ${spState.total ? `(${(spState.total-totalLoaded).toLocaleString()} restantes)` : ''}</button>`;
+    const remaining = spState.total ? spState.total - totalLoaded : '';
+    wrap.innerHTML = `<button class="sp-load-more-btn" id="spLoadMoreBtn">
+      Cargar más${remaining ? ` (${remaining.toLocaleString()} restantes)` : ''}
+    </button>`;
     grid.appendChild(wrap);
     document.getElementById('spLoadMoreBtn').addEventListener('click', () => {
       document.getElementById('spLoadMoreBtn').disabled = true;
@@ -2776,7 +2829,7 @@ function spRenderPage(newResults, isFirst) {
   } else {
     const done = document.createElement('div');
     done.className = 'sp-load-done';
-    done.textContent = `✓ ${totalLoaded.toLocaleString()} especies`;
+    done.textContent = `✓ ${spState.loaded.length.toLocaleString()} especies`;
     grid.appendChild(done);
   }
 }

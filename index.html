@@ -1336,10 +1336,18 @@ function showSpecies(parent, species) {
         <div class="level-rank">${parentRankEs}</div>
         <div class="level-title">${parent.name}</div>
       </div>
+      <button class="all-species-btn" id="allSpeciesBtnSp">
+        <span class="btn-icon">🌿</span>
+        <span class="btn-label">Ver todas las especies</span>
+      </button>
       <div class="level-sub">${sorted.length} especies</div>
     </div>
     <div class="species-grid" id="grid"></div>
   `;
+
+  document.getElementById('allSpeciesBtnSp').addEventListener('click', () => {
+    openAllSpeciesOverlay(parent.id, parent.name, parent.rank);
+  });
   const grid = document.getElementById('grid');
   sorted.forEach(sp => {
     const card = document.createElement('div');
@@ -1487,6 +1495,7 @@ async function openMapPopover(sp, triggerEl) {
   popoverFooter.textContent = 'iNaturalist · todas las observaciones';
   setTimeout(() => {
     popoverMap?.invalidateSize();
+    fitMapToBbox(popoverMap, sp.id);
   }, window.innerWidth <= 768 ? 150 : 30);
 }
 
@@ -1861,8 +1870,6 @@ async function loadMap(sp) {
         `https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?taxonKey=${gbifKey}&style=classic.point`,
         { maxZoom: 19, opacity: 0.5 }
       ).addTo(map);
-
-      // Layer toggle controls
       noteEl.innerHTML = `
         <span style="display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span style="color:#2d9e45;font-weight:600">● iNaturalist</span>
@@ -1876,9 +1883,36 @@ async function loadMap(sp) {
       subdomains: 'abcd', maxZoom: 19, opacity: 0.8
     }).addTo(map);
 
+    // 5. Auto-fit to where observations are
+    fitMapToBbox(map, sp.id);
+
   } catch(e) {
     document.getElementById('mapLoading').innerHTML = '<span style="color:var(--dim)">No se pudo cargar el mapa</span>';
   }
+}
+
+// Fetch bbox from a sample of observations and fit the map.
+// Cached per taxon so popover + modal share the same fetch.
+const bboxCache = {};
+async function fitMapToBbox(map, taxonId) {
+  try {
+    if (!bboxCache[taxonId]) {
+      const url = `${API}/observations?taxon_id=${taxonId}&quality_grade=research&captive=false&geo=true&per_page=50&order_by=id&locale=es`;
+      bboxCache[taxonId] = fetch(url)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const obs = (d?.results || []).filter(o => o.geojson);
+          if (!obs.length) return null;
+          const lats = obs.map(o => o.geojson.coordinates[1]);
+          const lngs = obs.map(o => o.geojson.coordinates[0]);
+          return [[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]];
+        }).catch(() => null);
+    }
+    const bounds = await bboxCache[taxonId];
+    if (bounds && map) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    }
+  } catch(e) { /* keep world view */ }
 }
 
 document.getElementById('modalClose').addEventListener('click', closeModal);
@@ -2050,7 +2084,30 @@ async function selectSearchResult(taxon) {
 
   navStack.length = 0;
   history.replaceState({ depth: 0 }, '', '');
-  await enterTaxon(taxon.id, taxon.name, rank);
+
+  // If rank is directly in NEXT_RANK, use it; otherwise find the nearest
+  // known parent rank so enterTaxon can drill down correctly.
+  const knownRanks = ['kingdom','phylum','class','order','family','genus'];
+  let effectiveRank = rank;
+  if (!NEXT_RANK[rank]) {
+    // Find the closest ancestor rank we support
+    const ancestors = taxon.ancestor_ids || [];
+    effectiveRank = 'kingdom'; // fallback
+    for (const r of knownRanks) {
+      if (rank === r) { effectiveRank = r; break; }
+    }
+    // Treat intermediate ranks as their closest parent in the standard hierarchy
+    const rankOrder = ['stateofmatter','kingdom','subkingdom','infrakingdom','superphylum',
+      'phylum','subphylum','superclass','class','subclass','infraclass','superorder',
+      'order','suborder','infraorder','superfamily','family','subfamily','tribe',
+      'subtribe','genus','subgenus','species'];
+    const idx = rankOrder.indexOf(rank);
+    for (let i = idx - 1; i >= 0; i--) {
+      if (NEXT_RANK[rankOrder[i]]) { effectiveRank = rankOrder[i]; break; }
+    }
+  }
+
+  await enterTaxon(taxon.id, taxon.name, effectiveRank);
 }
 
 // ─── PLACE FILTER ─────────────────────────────────────────────

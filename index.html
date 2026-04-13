@@ -41,6 +41,21 @@ body::before {
   background-size: 48px 48px; pointer-events: none; z-index: 0;
 }
 
+/* BACK BUTTON — mobile only */
+.back-btn {
+  display: none;
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text); cursor: pointer; font-size: 1.1rem;
+  align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.back-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+/* Only show on mobile when there's navigation history */
+@media (max-width: 768px) {
+  .back-btn.visible { display: flex; }
+}
+
 /* HEADER */
 header {
   position: sticky; top: 0; z-index: 100;
@@ -879,6 +894,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; position: rel
 
 <header>
   <div class="header-inner">
+    <button class="back-btn" id="backBtn" aria-label="Volver">←</button>
     <div class="logo" style="cursor:pointer;display:flex;align-items:center;gap:7px" id="logoBtn"><span style="font-size:1.4rem;line-height:1">🦋</span><span>Bio<em>Explorer</em></span></div>
     <nav class="breadcrumb" id="breadcrumb"></nav>
     <span class="src-badge">● iNaturalist</span>
@@ -1048,7 +1064,16 @@ function repaint() {
 
 function renderBreadcrumb() {
   const bc = document.getElementById('breadcrumb');
-  if (!navStack.length) { bc.innerHTML = ''; return; }
+  const backBtn = document.getElementById('backBtn');
+
+  if (!navStack.length) {
+    bc.innerHTML = '';
+    backBtn.classList.remove('visible');
+    return;
+  }
+
+  backBtn.classList.add('visible');
+
   let html = `<span class="crumb" data-nav="-1">Inicio</span>`;
   navStack.forEach((item, i) => {
     html += `<span class="crumb-sep">/</span>`;
@@ -1064,6 +1089,12 @@ function renderBreadcrumb() {
 }
 
 window.addEventListener('popstate', () => {
+  // Close overlays first, in priority order
+  if (spOverlay.classList.contains('open')) {
+    closeAllSpeciesOverlay();
+    history.pushState({ depth: navStack.length }, '', '');
+    return;
+  }
   if (document.getElementById('modalOverlay').classList.contains('open')) {
     closeModal();
     history.pushState({ depth: navStack.length }, '', '');
@@ -2996,6 +3027,16 @@ document.getElementById('logoBtn').addEventListener('click', () => {
   navStack.length = 0;
   history.replaceState({ depth: 0 }, '', '');
   repaint();
+});
+document.getElementById('backBtn').addEventListener('click', () => {
+  // Close overlays first, then navigate back
+  if (spOverlay.classList.contains('open')) { closeAllSpeciesOverlay(); return; }
+  if (document.getElementById('modalOverlay').classList.contains('open')) { closeModal(); return; }
+  if (navStack.length > 0) {
+    navStack.pop();
+    history.replaceState({ depth: navStack.length }, '', '');
+    repaint();
+  }
 });
 updateAuthUI();
 updateSeenCounter();

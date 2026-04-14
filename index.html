@@ -2861,29 +2861,56 @@ async function openAllSpeciesGenus(taxonId, taxonName, taxonRank) {
 
 // Fetch all genera inside a taxon (handles place filter)
 async function spFetchAllGenera(taxonId) {
-  // Use species_counts to get genera that actually have observations
-  // group by genus using ancestor resolution isn't needed —
-  // iNat /taxa?taxon_id=X&rank=genus works well for genus level
-  let all = [], page = 1;
-  while (true) {
-    const url = activePlaceId
-      ? `${API}/observations/species_counts?taxon_id=${taxonId}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=200&page=${page}&rank=genus&locale=es`
-      : `${API}/taxa?taxon_id=${taxonId}&rank=genus&per_page=500&page=${page}&order_by=observations_count&locale=es`;
-    const r = await fetch(url);
-    if (!r.ok) break;
-    const d = await r.json();
-    const results = d.results || [];
-    if (activePlaceId) {
-      results.forEach(row => all.push({ id: row.taxon.id, name: row.taxon.name }));
-    } else {
-      results.forEach(t => all.push({ id: t.id, name: t.name }));
+  if (activePlaceId) {
+    // With place filter: fetch ALL species in this taxon+place, then group by genus.
+    // species_counts doesn't support rank=genus filter, so we get species and extract genera.
+    let allSpecies = [], page = 1;
+    while (true) {
+      const url = `${API}/observations/species_counts?taxon_id=${taxonId}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=200&page=${page}&locale=es`;
+      const r = await fetch(url);
+      if (!r.ok) break;
+      const d = await r.json();
+      const results = d.results || [];
+      results.forEach(row => allSpecies.push({
+        id: row.taxon.id, name: row.taxon.name,
+        common: row.taxon.preferred_common_name || '',
+        photo: row.taxon.default_photo?.medium_url || row.taxon.default_photo?.url || null,
+        observations: row.count || 0,
+        inatUrl: `https://www.inaturalist.org/taxa/${row.taxon.id}`,
+        wikipedia: row.taxon.wikipedia_url || null,
+        ancestor_ids: row.taxon.ancestor_ids || [],
+      }));
+      if (results.length < 200) break;
+      if (page >= 25) break;
+      page++;
+      await new Promise(res => setTimeout(res, 60));
     }
-    if (results.length < (activePlaceId ? 200 : 500)) break;
-    if (page >= 10) break;
-    page++;
-    await new Promise(res => setTimeout(res, 60));
+    // Group by genus (first word of scientific name)
+    const genusMap = {};
+    allSpecies.forEach(sp => {
+      const g = sp.name.split(' ')[0];
+      if (!genusMap[g]) genusMap[g] = { id: null, name: g, species: [] };
+      genusMap[g].species.push(sp);
+    });
+    // Mark as pre-loaded so spLoadNextGenera skips fetching species again
+    return Object.values(genusMap).sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    // Without place filter: use /taxa?rank=genus which works correctly
+    let all = [], page = 1;
+    while (true) {
+      const url = `${API}/taxa?taxon_id=${taxonId}&rank=genus&per_page=500&page=${page}&order_by=observations_count&locale=es`;
+      const r = await fetch(url);
+      if (!r.ok) break;
+      const d = await r.json();
+      const results = d.results || [];
+      results.forEach(t => all.push({ id: t.id, name: t.name }));
+      if (results.length < 500) break;
+      if (page >= 10) break;
+      page++;
+      await new Promise(res => setTimeout(res, 60));
+    }
+    return all;
   }
-  return all;
 }
 
 // Load next SP_GENERA_PER_PAGE genera and their species
@@ -2908,32 +2935,21 @@ async function spLoadNextGenera() {
   }
 
   // Fetch species for each genus in batch (parallel)
+  // Skip if species already pre-loaded (happens when place filter is active)
   await Promise.all(batch.map(async genus => {
+    if (genus.species) return; // already loaded by spFetchAllGenera
     try {
       let species = [];
-      if (activePlaceId) {
-        const url = `${API}/observations/species_counts?taxon_id=${genus.id}&place_id=${activePlaceId}&verifiable=true&captive=false&per_page=200&locale=es`;
+      // Fetch all species pages for this genus (global, no place filter)
+      let page = 1;
+      while (true) {
+        const url = `${API}/taxa?taxon_id=${genus.id}&rank=species&per_page=200&page=${page}&order_by=observations_count&locale=es`;
         const r = await fetch(url); const d = await r.json();
-        species = (d.results || []).map(row => ({
-          id: row.taxon.id, name: row.taxon.name,
-          common: row.taxon.preferred_common_name || '',
-          photo: row.taxon.default_photo?.medium_url || row.taxon.default_photo?.url || null,
-          observations: row.count || 0,
-          inatUrl: `https://www.inaturalist.org/taxa/${row.taxon.id}`,
-          wikipedia: row.taxon.wikipedia_url || null, ancestor_ids: row.taxon.ancestor_ids || [],
-        }));
-      } else {
-        // Fetch all species pages for this genus
-        let page = 1;
-        while (true) {
-          const url = `${API}/taxa?taxon_id=${genus.id}&rank=species&per_page=200&page=${page}&order_by=observations_count&locale=es`;
-          const r = await fetch(url); const d = await r.json();
-          const res = (d.results || []).filter(t => !isExtinct(t)).map(spToObj);
-          species = species.concat(res);
-          if (res.length < 200) break;
-          page++;
-          await new Promise(res2 => setTimeout(res2, 60));
-        }
+        const res = (d.results || []).filter(t => !isExtinct(t)).map(spToObj);
+        species = species.concat(res);
+        if (res.length < 200) break;
+        page++;
+        await new Promise(res2 => setTimeout(res2, 60));
       }
       genus.species = species.sort((a, b) => a.name.localeCompare(b.name));
     } catch(e) {
